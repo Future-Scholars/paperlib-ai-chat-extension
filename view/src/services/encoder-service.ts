@@ -1,4 +1,4 @@
-import { pipeline, FeatureExtractionPipeline } from '@/utils/transformers.js/src/transformers';
+import { pipeline, FeatureExtractionPipeline } from '@xenova/transformers';
 import similarity from "compute-cosine-similarity";
 
 export class EncoderService {
