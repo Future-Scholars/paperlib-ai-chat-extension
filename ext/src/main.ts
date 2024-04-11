@@ -93,10 +93,8 @@ class PaperlibAIChatExtension extends PLExtension {
       await PLMainAPI.windowProcessManagementService.create(windowID, {
         entry: path.resolve(__dirname, "./view/index.html"),
         title: "Discuss with LLM",
-        width: 300,
-        height: 400,
-        minWidth: 300,
-        minHeight: 400,
+        width: 900,
+        height: 800,
         useContentSize: true,
         center: true,
         resizable: true,
