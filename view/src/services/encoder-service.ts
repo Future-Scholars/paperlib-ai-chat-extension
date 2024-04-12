@@ -2,10 +2,14 @@ import { FeatureExtractionPipeline } from "@xenova/transformers";
 import similarity from "compute-cosine-similarity";
 
 // Initialise worker
-const workerPath = "worker.js"
+const workerPath = "worker.js";
 
 const worker = new Worker(new URL(workerPath, import.meta.url), {
   type: "module",
+});
+
+worker.onerror((event) => {
+  console.error("transformers worker error:", event.error);
 });
 
 export class EncoderService {
