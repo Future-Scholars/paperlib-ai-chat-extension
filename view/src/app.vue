@@ -64,6 +64,8 @@ const sendMessage = async (event: Event) => {
 
   const context = await chatService.retrieveContext(msg);
 
+  console.log("$context", context);
+
   const anwser = await chatService.queryLLM(msg, context);
 
   messageList.value.pop();
