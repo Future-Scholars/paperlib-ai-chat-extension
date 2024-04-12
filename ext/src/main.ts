@@ -106,7 +106,6 @@ class PaperlibAIChatExtension extends PLExtension {
         },
         frame: false,
         show: true,
-        alwaysOnTop: true,
       });
 
       this._windowIDs.push(windowID);
