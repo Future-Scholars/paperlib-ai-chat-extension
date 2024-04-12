@@ -8,7 +8,7 @@ const worker = new Worker(new URL(workerPath, import.meta.url), {
   type: "module",
 });
 
-worker.onerror((event) => {
+worker.onerror((event: ErrorEvent) => {
   console.error("transformers worker error:", event.error);
 });
 
