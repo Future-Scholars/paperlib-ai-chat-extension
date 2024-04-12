@@ -106,6 +106,7 @@ class PaperlibAIChatExtension extends PLExtension {
         },
         frame: false,
         show: true,
+        alwaysOnTop: true,
       });
 
       this._windowIDs.push(windowID);
@@ -131,7 +132,7 @@ class PaperlibAIChatExtension extends PLExtension {
     }
     PLExtAPI.extensionPreferenceService.unregister(this.id);
     for (const windowID of this._windowIDs) {
-      try{
+      try {
         await PLMainAPI.windowProcessManagementService.destroy(windowID);
       } catch (error) {}
     }

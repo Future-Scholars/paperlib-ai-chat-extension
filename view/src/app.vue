@@ -4,11 +4,13 @@ import { PLAPI, PLExtAPI, PLExtension, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
 
 // Show some information about the paper
-const paperEntity = ref({
-  title: "Deep Residual Network",
-  authors: "Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun",
-  year: "2015",
-  publication: "Computer Vision and Pattern Recognition (CVPR)",
+const curPaperEntity = ref<
+  Pick<PaperEntity, "title" | "authors" | "publication" | "pubTime">
+>({
+  title: "",
+  authors: "",
+  publication: "",
+  pubTime: "",
 });
 
 const messageList = ref([
@@ -26,11 +28,21 @@ const loadPaperText = async () => {
     "selectedIds",
   )) as string[];
 
-  await chatService.loadPaperEntity(selectedIds[0]);
-  await chatService.initializeEncoder();
+  const loadResults = await PLAPI.paperService.loadByIds(selectedIds);
+  const paperEntity = loadResults.length > 0 ? loadResults[0] : undefined;
+
+  if (paperEntity) {
+    curPaperEntity.value = paperEntity;
+    await chatService.loadPaperEntity(paperEntity);
+    await chatService.initializeEncoder();
+  }
 };
 
-const closeWindow = () => {};
+const closeWindow = () => {
+  PLMainAPI.windowProcessManagementService.close(
+    "paperlib-ai-chat-extension-window",
+  );
+};
 
 const sendMessage = async (event: Event) => {
   const msg = (event.target as HTMLInputElement).value;
@@ -74,11 +86,11 @@ onMounted(() => {
       id="paper-info-bar"
       class="flex flex-col flex-none bg-neutral-200 px-2 py-2 text-neutral-800 rounded-md space-y-1"
     >
-      <span class="font-semibold truncate">{{ paperEntity.title }}</span>
-      <span class="text-xs truncate">{{ paperEntity.authors }}</span>
+      <span class="font-semibold truncate">{{ curPaperEntity.title }}</span>
+      <span class="text-xs truncate">{{ curPaperEntity.authors }}</span>
       <div class="flex space-x-2 text-xs">
-        <span>{{ paperEntity.year }}</span>
-        <span class="italic truncate">{{ paperEntity.publication }}</span>
+        <span>{{ curPaperEntity.pubTime }}</span>
+        <span class="italic truncate">{{ curPaperEntity.publication }}</span>
       </div>
     </div>
     <div id="msg-list" class="grow py-2 text-sm space-y-2 overflow-scroll">
@@ -111,7 +123,7 @@ onMounted(() => {
       />
       <div
         class="flex-none flex content-center items-center px-3 bg-neutral-200 rounded-md text-sm"
-        @click="loadPaperText"
+        @click="closeWindow"
       >
         <span>Close</span>
       </div>

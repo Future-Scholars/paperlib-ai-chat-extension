@@ -16,10 +16,7 @@ export class ChatService {
     this._llmService = new LLMService();
   }
 
-  async loadPaperEntity(paperEntityId: string) {
-    const loadResults = await PLAPI.paperService.loadByIds([paperEntityId]);
-    const paperEntity = loadResults.length > 0 ? loadResults[0] : undefined;
-
+  async loadPaperEntity(paperEntity: PaperEntity) {
     if (!paperEntity) {
       throw new Error("Paper entity not found");
     }
