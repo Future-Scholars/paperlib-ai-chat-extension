@@ -36,8 +36,8 @@ devDependencies:
     specifier: ^1.1.5
     version: 1.1.5
   paperlib-api:
-    specifier: ^0.1.5
-    version: 0.1.5(typescript@5.4.3)(vue@3.4.21)
+    specifier: ^0.1.7
+    version: 0.1.7(typescript@5.4.3)(vue@3.4.21)
   pdfjs-dist:
     specifier: ^4.0.269
     version: 4.0.379
@@ -2905,8 +2905,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /paperlib-api@0.1.5(typescript@5.4.3)(vue@3.4.21):
-    resolution: {integrity: sha512-BzAmaI6jyjqPk2prx1gz8CeCfX594azHbyLF24t6SUeUdPKi7EUFCFGWqaoBj7twroZlisDdETw5DzIShU51ig==}
+  /paperlib-api@0.1.7(typescript@5.4.3)(vue@3.4.21):
+    resolution: {integrity: sha512-Wkb0p20Mty/C7XWvUsOBPMqiQFmlhtP7TFJXSlM1PB+TpaX0LUDDOz/U0rblygW1luGZPLVtbXY2+HPTvWPhnA==}
     engines: {node: '>=18.16.1'}
     dependencies:
       citation-js: 0.6.4
@@ -2958,19 +2958,9 @@ packages:
       minipass: 7.0.4
     dev: true
 
-  /path2d-polyfill@2.1.1:
-    resolution: {integrity: sha512-4Rka5lN+rY/p0CdD8+E+BFv51lFaFvJOrlOhyQ+zjzyQrzyh3ozmxd1vVGGDdIbUFSBtIZLSnspxTgPT0iJhvA==}
-    engines: {node: '>=18'}
-    deprecated: this package has been deprecated
-    requiresBuild: true
-    dependencies:
-      path2d: 0.1.1
-    dev: true
-    optional: true
-
-  /path2d@0.1.1:
-    resolution: {integrity: sha512-/+S03c8AGsDYKKBtRDqieTJv2GlkMb0bWjnqOgtF6MkjdUQ9a8ARAtxWf9NgKLGm2+WQr6+/tqJdU8HNGsIDoA==}
-    engines: {node: '>=6'}
+  /path2d-polyfill@2.0.1:
+    resolution: {integrity: sha512-ad/3bsalbbWhmBo0D6FZ4RNMwsLsPpL6gnvhuSaU5Vm7b06Kr5ubSltQQ0T7YKsiJQO+g22zJ4dJKNTXIyOXtA==}
+    engines: {node: '>=8'}
     requiresBuild: true
     dev: true
     optional: true
@@ -2980,7 +2970,7 @@ packages:
     engines: {node: '>=18'}
     optionalDependencies:
       canvas: 2.11.2
-      path2d-polyfill: 2.1.1
+      path2d-polyfill: 2.0.1
     transitivePeerDependencies:
       - encoding
       - supports-color
