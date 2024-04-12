@@ -2,7 +2,9 @@ import { FeatureExtractionPipeline } from "@xenova/transformers";
 import similarity from "compute-cosine-similarity";
 
 // Initialise worker
-const worker = new Worker(new URL("./worker.ts", import.meta.url), {
+const workerPath = "worker.js"
+
+const worker = new Worker(new URL(workerPath, import.meta.url), {
   type: "module",
 });
 

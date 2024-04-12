@@ -9,7 +9,7 @@
   "scripts": {
     "build": "npm run build-ext && npm run build-view",
     "build-ext": "tsc --noEmit --p ./ext/tsconfig.json && vite build --config ./ext/vite.config.ts",
-    "build-view": "vue-tsc --noEmit --p ./view/tsconfig.json && vite build --config ./view/vite.config.ts"
+    "build-view": "vue-tsc --noEmit --p ./view/tsconfig.json && vite build --config ./view/vite.config.ts && vite build --config ./view/vite.worker.config.ts"
   },
   "engines": {
     "node": ">=16.17.1"

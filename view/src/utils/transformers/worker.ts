@@ -1,6 +1,13 @@
 // https://github.com/xenova/transformers.js/blob/main/examples/demo-site/src/worker.js
-import { pipeline, env, FeatureExtractionPipeline } from "@xenova/transformers";
-import { AllTasks, PipelineType } from "@xenova/transformers/types/pipelines";
+import {
+  pipeline,
+  FeatureExtractionPipeline,
+  PipelineType,
+  env,
+} from "@xenova/transformers";
+
+env.allowLocalModels = false;
+
 // Define task function mapping
 const TASK_FUNCTION_MAPPING = {
   "feature-extraction": featureExtraction,
