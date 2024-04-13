@@ -42,7 +42,7 @@ export default defineConfig({
 
   plugins: [
     vue(),
-    renderer({}),
+    renderer(),
     modify({
       find: /import\s*{\s*[\s\S]*}\s*from\s*"paperlib-api?/,
       // find: /import { PLAPI } from "paperlib";/,
