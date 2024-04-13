@@ -2,7 +2,7 @@ import renderer from "@future-scholars/vite-plugin-electron-renderer";
 import vue from "@vitejs/plugin-vue";
 import path from "node:path";
 import modify from "rollup-plugin-modify";
-import commonjs from '@rollup/plugin-commonjs';
+import commonjs from "@rollup/plugin-commonjs";
 import { defineConfig } from "vite";
 
 // https://vitejs.dev/config/
@@ -42,13 +42,7 @@ export default defineConfig({
 
   plugins: [
     vue(),
-    renderer({
-      resolve: {
-        "@xenova/transformers": {
-          type: "esm",
-        }
-      },
-    }),
+    renderer({}),
     modify({
       find: /import\s*{\s*[\s\S]*}\s*from\s*"paperlib-api?/,
       // find: /import { PLAPI } from "paperlib";/,
