@@ -39,7 +39,7 @@ const loadPaperText = async () => {
 };
 
 const closeWindow = () => {
-  PLMainAPI.windowProcessManagementService.close(
+  PLMainAPI.windowProcessManagementService.forceClose(
     "paperlib-ai-chat-extension-window",
   );
 };
