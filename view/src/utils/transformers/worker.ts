@@ -7,6 +7,10 @@ import {
 } from "@xenova/transformers";
 
 env.allowLocalModels = false;
+env.backends.onnx.wasm.wasmPaths = self.location.href.replace(
+  "assets/worker.js",
+  "/transformer.js/",
+);
 
 // Define task function mapping
 const TASK_FUNCTION_MAPPING = {
