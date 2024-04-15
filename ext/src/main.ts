@@ -10,6 +10,7 @@ const windowID = "paperlib-ai-chat-extension-window";
 class PaperlibAIChatExtension extends PLExtension {
   disposeCallbacks: (() => void)[];
   private parentWindowHeaderHeight = 36;
+  private timer: NodeJS.Timeout | null = null;
 
   constructor() {
     super({
@@ -56,6 +57,16 @@ class PaperlibAIChatExtension extends PLExtension {
     });
 
     this.disposeCallbacks = [];
+  }
+
+  async debounceSetTopRightPosition() {
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+    this.timer = setTimeout(() => {
+      this.setTopRightPosition();
+      this.timer = null;
+    }, 300);
   }
 
   async setTopRightPosition() {
@@ -140,7 +151,7 @@ class PaperlibAIChatExtension extends PLExtension {
       processId.renderer as any,
       (newValues: { value: string }) => {
         if (newValues.value === "move" || newValues.value === "resize") {
-          this.setTopRightPosition();
+          this.debounceSetTopRightPosition();
         }
       },
     );
