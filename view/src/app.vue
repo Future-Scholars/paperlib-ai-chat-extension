@@ -6,7 +6,7 @@ import { disposable } from "@/base/dispose.ts";
 
 const INIT_MESSAGE_LIST = [
   {
-    id: 1,
+    id: crypto.randomUUID(),
     content:
       "Hello, you can ask me anything about this paper. I will try my best to anwser you.",
     sender: "system",
@@ -52,15 +52,15 @@ const sendMessage = async (event: Event) => {
   const msg = (event.target as HTMLInputElement).value;
   if (msg === "") return;
   (event.target as HTMLInputElement).value = "";
-
   messageList.value.push({
-    id: messageList.value.length + 1,
+    id: crypto.randomUUID(),
     content: msg,
     sender: "user",
     time: new Date().toLocaleString(),
   });
+  const receivedMsgId = crypto.randomUUID();
   messageList.value.push({
-    id: messageList.value.length + 1,
+    id: receivedMsgId,
     content: "I am thinking...",
     sender: "system",
     time: new Date().toLocaleString(),
@@ -69,16 +69,18 @@ const sendMessage = async (event: Event) => {
   const context = await chatService.retrieveContext(msg);
 
   console.log("$context", context);
-
   const anwser = await chatService.queryLLM(msg, context);
-
-  messageList.value.pop();
-  messageList.value.push({
-    id: messageList.value.length + 1,
-    content: anwser,
-    sender: "system",
-    time: new Date().toLocaleString(),
-  });
+  const targetIndex = messageList.value.findIndex(
+    (item) => item.id === receivedMsgId,
+  );
+  if (targetIndex !== -1) {
+    messageList.value[targetIndex] = {
+      id: crypto.randomUUID(),
+      content: anwser || "Something wrong!",
+      sender: "system",
+      time: new Date().toLocaleString(),
+    };
+  }
 };
 
 disposable(
