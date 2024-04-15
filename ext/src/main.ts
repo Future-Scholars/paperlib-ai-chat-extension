@@ -1,10 +1,12 @@
 import { PLAPI, PLExtAPI, PLExtension, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
+import { processId } from "paperlib-api/utils";
 import path from "path";
 
 class PaperlibAIChatExtension extends PLExtension {
   disposeCallbacks: (() => void)[];
   private windowID = "paperlib-ai-chat-extension-window";
+  private parentWindowHeaderHeight = 36;
 
   constructor() {
     super({
@@ -53,6 +55,25 @@ class PaperlibAIChatExtension extends PLExtension {
     this.disposeCallbacks = [];
   }
 
+  async setTopRightPosition() {
+    const parentBounds =
+      await PLMainAPI.windowProcessManagementService.getBounds(
+        processId.renderer,
+      );
+    const currentBounds =
+      await PLMainAPI.windowProcessManagementService.getBounds(this.windowID);
+    if (parentBounds && currentBounds) {
+      let x = 0;
+      let y = parentBounds.y + this.parentWindowHeaderHeight;
+      x = parentBounds.x + parentBounds.width - currentBounds.width;
+      await PLMainAPI.windowProcessManagementService.setBounds(this.windowID, {
+        x,
+        y,
+        height: parentBounds.height - this.parentWindowHeaderHeight,
+      });
+    }
+  }
+
   async initialize() {
     await PLExtAPI.extensionPreferenceService.register(
       this.id,
@@ -82,7 +103,6 @@ class PaperlibAIChatExtension extends PLExtension {
       entry: path.resolve(__dirname, "./view/index.html"),
       title: "Discuss with LLM",
       width: 900,
-      height: 800,
       useContentSize: true,
       center: true,
       resizable: true,
@@ -96,6 +116,13 @@ class PaperlibAIChatExtension extends PLExtension {
       show: true,
     });
 
+    await PLMainAPI.windowProcessManagementService.setParentWindow(
+      processId.renderer,
+      this.windowID,
+    );
+
+    await this.setTopRightPosition();
+
     const disposeCallback = PLMainAPI.windowProcessManagementService.on(
       this.windowID as any,
       (newValues: { value: string }) => {
@@ -106,7 +133,17 @@ class PaperlibAIChatExtension extends PLExtension {
       },
     );
 
+    const disposeMoveCallback = PLMainAPI.windowProcessManagementService.on(
+      processId.renderer as any,
+      (newValues: { value: string }) => {
+        if (newValues.value === "move" || newValues.value === "resize") {
+          this.setTopRightPosition();
+        }
+      },
+    );
+
     this.disposeCallbacks.push(disposeCallback);
+    this.disposeCallbacks.push(disposeMoveCallback);
   }
 
   async dispose() {
