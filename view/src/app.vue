@@ -2,6 +2,17 @@
 import { onMounted, ref } from "vue";
 import { PLAPI, PLExtAPI, PLExtension, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
+import { disposable } from "@/base/dispose.ts";
+
+const INIT_MESSAGE_LIST = [
+  {
+    id: 1,
+    content:
+      "Hello, you can ask me anything about this paper. I will try my best to anwser you.",
+    sender: "system",
+    time: "2021-10-10 10:10:10",
+  },
+];
 
 // Show some information about the paper
 const curPaperEntity = ref<
@@ -13,17 +24,10 @@ const curPaperEntity = ref<
   pubTime: "",
 });
 
-const messageList = ref([
-  {
-    id: 1,
-    content:
-      "Hello, you can ask me anything about this paper. I will try my best to anwser you.",
-    sender: "system",
-    time: "2021-10-10 10:10:10",
-  },
-]);
+const messageList = ref([...INIT_MESSAGE_LIST]);
 
 const loadPaperText = async () => {
+  messageList.value = [...INIT_MESSAGE_LIST];
   const selectedIds = (await PLAPI.uiStateService.getState(
     "selectedIds",
   )) as string[];
@@ -76,6 +80,13 @@ const sendMessage = async (event: Event) => {
     time: new Date().toLocaleString(),
   });
 };
+
+disposable(
+  PLAPI.uiStateService.onChanged(
+    ["selectedIndex", "entitiesReloaded"],
+    loadPaperText,
+  ),
+);
 
 onMounted(() => {
   loadPaperText();
