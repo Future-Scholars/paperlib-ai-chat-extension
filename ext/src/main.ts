@@ -4,8 +4,7 @@ import path from "path";
 
 class PaperlibAIChatExtension extends PLExtension {
   disposeCallbacks: (() => void)[];
-
-  private readonly _windowIDs: string[];
+  private windowID = "paperlib-ai-chat-extension-window";
 
   constructor() {
     super({
@@ -52,7 +51,6 @@ class PaperlibAIChatExtension extends PLExtension {
     });
 
     this.disposeCallbacks = [];
-    this._windowIDs = [];
   }
 
   async initialize() {
@@ -80,49 +78,35 @@ class PaperlibAIChatExtension extends PLExtension {
   }
 
   private async _createChatWindow(paperEntity: PaperEntity) {
-    // TODO: fix here
-    const windowID = `paperlib-ai-chat-extension-window`;
+    await PLMainAPI.windowProcessManagementService.create(this.windowID, {
+      entry: path.resolve(__dirname, "./view/index.html"),
+      title: "Discuss with LLM",
+      width: 900,
+      height: 800,
+      useContentSize: true,
+      center: true,
+      resizable: true,
+      skipTaskbar: true,
+      webPreferences: {
+        webSecurity: false,
+        nodeIntegration: true,
+        contextIsolation: false,
+      },
+      frame: false,
+      show: true,
+    });
 
-    if (this._windowIDs.includes(windowID)) {
-      // Show
-      PLMainAPI.windowProcessManagementService.show(windowID);
-    } else {
-      // Create
-      const screenSize =
-        await PLMainAPI.windowProcessManagementService.getScreenSize();
-      await PLMainAPI.windowProcessManagementService.create(windowID, {
-        entry: path.resolve(__dirname, "./view/index.html"),
-        title: "Discuss with LLM",
-        width: 900,
-        height: 800,
-        useContentSize: true,
-        center: true,
-        resizable: true,
-        skipTaskbar: true,
-        webPreferences: {
-          webSecurity: false,
-          nodeIntegration: true,
-          contextIsolation: false,
-        },
-        frame: false,
-        show: true,
-      });
+    const disposeCallback = PLMainAPI.windowProcessManagementService.on(
+      this.windowID as any,
+      (newValues: { value: string }) => {
+        if (newValues.value === "close") {
+          PLMainAPI.windowProcessManagementService.destroy(this.windowID);
+          disposeCallback();
+        }
+      },
+    );
 
-      this._windowIDs.push(windowID);
-
-      const disposeCallback = PLMainAPI.windowProcessManagementService.on(
-        windowID as any,
-        (newValues: { value: string }) => {
-          if (newValues.value === "close") {
-            PLMainAPI.windowProcessManagementService.destroy(windowID);
-            this._windowIDs.splice(this._windowIDs.indexOf(windowID), 1);
-            disposeCallback();
-          }
-        },
-      );
-
-      this.disposeCallbacks.push(disposeCallback);
-    }
+    this.disposeCallbacks.push(disposeCallback);
   }
 
   async dispose() {
@@ -130,11 +114,7 @@ class PaperlibAIChatExtension extends PLExtension {
       disposeCallback();
     }
     PLExtAPI.extensionPreferenceService.unregister(this.id);
-    for (const windowID of this._windowIDs) {
-      try {
-        await PLMainAPI.windowProcessManagementService.destroy(windowID);
-      } catch (error) {}
-    }
+    await PLMainAPI.windowProcessManagementService.destroy(this.windowID);
   }
 
   private async _startChat() {
