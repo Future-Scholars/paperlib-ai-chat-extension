@@ -124,7 +124,7 @@ onMounted(() => {
         @keypress.enter="sendMessage($event)"
       />
       <div
-        class="flex-none flex content-center items-center px-3 bg-neutral-200 rounded-md text-sm"
+        class="flex-none flex content-center items-center px-3 bg-neutral-200 rounded-md text-sm cursor-pointer"
         @click="closeWindow"
       >
         <span>Close</span>
