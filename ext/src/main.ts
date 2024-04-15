@@ -3,14 +3,17 @@ import { PaperEntity } from "paperlib-api/model";
 import { processId } from "paperlib-api/utils";
 import path from "path";
 
+const extID = "@future-scholars/paperlib-ai-chat-extension";
+
+const windowID = "paperlib-ai-chat-extension-window";
+
 class PaperlibAIChatExtension extends PLExtension {
   disposeCallbacks: (() => void)[];
-  private windowID = "paperlib-ai-chat-extension-window";
   private parentWindowHeaderHeight = 36;
 
   constructor() {
     super({
-      id: "@future-scholars/paperlib-ai-chat-extension",
+      id: extID,
       defaultPreference: {
         "ai-model": {
           type: "options",
@@ -61,12 +64,12 @@ class PaperlibAIChatExtension extends PLExtension {
         processId.renderer,
       );
     const currentBounds =
-      await PLMainAPI.windowProcessManagementService.getBounds(this.windowID);
+      await PLMainAPI.windowProcessManagementService.getBounds(windowID);
     if (parentBounds && currentBounds) {
       let x = 0;
       let y = parentBounds.y + this.parentWindowHeaderHeight;
       x = parentBounds.x + parentBounds.width - currentBounds.width;
-      await PLMainAPI.windowProcessManagementService.setBounds(this.windowID, {
+      await PLMainAPI.windowProcessManagementService.setBounds(windowID, {
         x,
         y,
         height: parentBounds.height - this.parentWindowHeaderHeight,
@@ -99,7 +102,7 @@ class PaperlibAIChatExtension extends PLExtension {
   }
 
   private async _createChatWindow(paperEntity: PaperEntity) {
-    await PLMainAPI.windowProcessManagementService.create(this.windowID, {
+    await PLMainAPI.windowProcessManagementService.create(windowID, {
       entry: path.resolve(__dirname, "./view/index.html"),
       title: "Discuss with LLM",
       width: 900,
@@ -118,16 +121,16 @@ class PaperlibAIChatExtension extends PLExtension {
 
     await PLMainAPI.windowProcessManagementService.setParentWindow(
       processId.renderer,
-      this.windowID,
+      windowID,
     );
 
     await this.setTopRightPosition();
 
     const disposeCallback = PLMainAPI.windowProcessManagementService.on(
-      this.windowID as any,
+      windowID as any,
       (newValues: { value: string }) => {
         if (newValues.value === "close") {
-          PLMainAPI.windowProcessManagementService.destroy(this.windowID);
+          PLMainAPI.windowProcessManagementService.destroy(windowID);
           disposeCallback();
         }
       },
@@ -151,7 +154,7 @@ class PaperlibAIChatExtension extends PLExtension {
       disposeCallback();
     }
     PLExtAPI.extensionPreferenceService.unregister(this.id);
-    await PLMainAPI.windowProcessManagementService.destroy(this.windowID);
+    await PLMainAPI.windowProcessManagementService.destroy(windowID);
   }
 
   private async _startChat() {
