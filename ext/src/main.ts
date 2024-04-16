@@ -7,6 +7,8 @@ const extID = "@future-scholars/paperlib-ai-chat-extension";
 
 const windowID = "paperlib-ai-chat-extension-window";
 
+const openChatMenuItemId = "open-ai-chat";
+
 class PaperlibAIChatExtension extends PLExtension {
   disposeCallbacks: (() => void)[];
   private parentWindowHeaderHeight = 36;
@@ -110,6 +112,25 @@ class PaperlibAIChatExtension extends PLExtension {
         event: "@future-scholars/paperlib-ai-chat-extension:start",
       }),
     );
+
+    PLMainAPI.contextMenuService.registerContextMenu(this.id, [
+      {
+        id: openChatMenuItemId,
+        label: "AIChatExt - open",
+      },
+    ]);
+
+    this.disposeCallbacks.push(
+      PLMainAPI.contextMenuService.on(
+        "dataContextMenuFromExtensionsClicked",
+        (value) => {
+          const { extID, itemID } = value.value;
+          if (extID === this.id && itemID === openChatMenuItemId) {
+            this._startChat();
+          }
+        },
+      ),
+    );
   }
 
   private async _createChatWindow(paperEntity: PaperEntity) {
@@ -151,6 +172,7 @@ class PaperlibAIChatExtension extends PLExtension {
         if (newValues.value === "close") {
           PLMainAPI.windowProcessManagementService.destroy(windowID);
           disposeCallback();
+          disposeMoveCallback();
         }
       },
     );
@@ -172,7 +194,8 @@ class PaperlibAIChatExtension extends PLExtension {
     for (const disposeCallback of this.disposeCallbacks) {
       disposeCallback();
     }
-    PLExtAPI.extensionPreferenceService.unregister(this.id);
+    PLMainAPI.contextMenuService.unregisterContextMenu(extID);
+    PLExtAPI.extensionPreferenceService.unregister(extID);
     await PLMainAPI.windowProcessManagementService.destroy(windowID);
   }
 
