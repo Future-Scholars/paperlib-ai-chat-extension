@@ -9,7 +9,7 @@ import {
 env.allowLocalModels = false;
 env.backends.onnx.wasm.wasmPaths = self.location.href.replace(
   "assets/worker.js",
-  "/transformer.js/",
+  "/transformersWasm/",
 );
 
 // Define task function mapping

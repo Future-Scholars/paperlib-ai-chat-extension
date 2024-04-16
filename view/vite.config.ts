@@ -4,6 +4,7 @@ import path from "node:path";
 import modify from "rollup-plugin-modify";
 import commonjs from "@rollup/plugin-commonjs";
 import { defineConfig } from "vite";
+import copy from "rollup-plugin-copy";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -41,6 +42,14 @@ export default defineConfig({
   },
 
   plugins: [
+    copy({
+      targets: [
+        {
+          src: "node_modules/@xenova/transformers/dist/*.wasm",
+          dest: "dist/transformersWasm",
+        },
+      ],
+    }),
     vue(),
     renderer(),
     modify({
