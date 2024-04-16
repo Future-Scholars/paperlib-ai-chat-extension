@@ -113,6 +113,14 @@ class PaperlibAIChatExtension extends PLExtension {
   }
 
   private async _createChatWindow(paperEntity: PaperEntity) {
+    const existed =
+      await PLMainAPI.windowProcessManagementService.exist(windowID);
+
+    if (existed) {
+      await PLMainAPI.windowProcessManagementService.focus(windowID);
+      return;
+    }
+
     await PLMainAPI.windowProcessManagementService.create(windowID, {
       entry: path.resolve(__dirname, "./view/index.html"),
       title: "Discuss with LLM",
