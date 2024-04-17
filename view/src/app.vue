@@ -168,7 +168,7 @@ onMounted(() => {
       class="flex h-8 bg-neutral-200 justify-center items-center w-full text-xs font-semibold"
     >
       <div class="flex-1 justify-center items-center draggable">
-        <div class="pl-1">AI Chat</div>
+        <div class="pl-2">AI Chat</div>
       </div>
       <div class="flex flex-row justify-center items-center">
         <div
