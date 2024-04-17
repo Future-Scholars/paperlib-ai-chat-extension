@@ -4,6 +4,7 @@ import { PLAPI, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
 import { disposable } from "@/base/dispose.ts";
 import { processId } from "paperlib-api/utils";
+import { BIconX, BIconPin, BIconPinFill } from "bootstrap-icons-vue";
 
 const windowID = "paperlib-ai-chat-extension-window";
 
@@ -170,9 +171,26 @@ onMounted(() => {
         <div class="pl-1">AI Chat</div>
       </div>
       <div class="flex flex-row justify-center items-center">
-        <div @click="pin">Pin</div>
-        <div @click="unpin">Unpin</div>
-        <div @click="closeWindow">Close</div>
+        <div
+          v-if="pinned"
+          class="flex w-10 h-8 hover:bg-neutral-300 transition ease-in-out justify-center items-center"
+          @click="unpin"
+        >
+          <BIconPinFill class="text-sm" />
+        </div>
+        <div
+          v-else
+          class="flex w-10 h-8 hover:bg-neutral-300 transition ease-in-out justify-center items-center"
+          @click="pin"
+        >
+          <BIconPin class="text-sm" />
+        </div>
+        <div
+          class="flex w-10 h-8 text-neutral-500 hover:bg-red-600 transition ease-in-out hover:text-neutral-200 justify-center items-center"
+          @click="closeWindow"
+        >
+          <BIconX class="text-lg" />
+        </div>
       </div>
     </div>
     <div class="flex flex-col p-4 bg-neutral-50 flex-1">
