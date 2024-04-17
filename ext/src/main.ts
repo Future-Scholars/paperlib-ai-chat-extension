@@ -66,12 +66,19 @@ class PaperlibAIChatExtension extends PLExtension {
       clearTimeout(this.timer);
     }
     this.timer = setTimeout(() => {
-      this.setTopRightPosition();
+      this.setTopBottomPosition();
       this.timer = null;
     }, 300);
   }
 
-  async setTopRightPosition() {
+  async setTopBottomPosition() {
+    const isChildWindow =
+      await PLMainAPI.windowProcessManagementService.hasParentWindow(windowID);
+
+    if (!isChildWindow) {
+      return;
+    }
+
     const parentBounds =
       await PLMainAPI.windowProcessManagementService.getBounds(
         processId.renderer,
@@ -164,7 +171,7 @@ class PaperlibAIChatExtension extends PLExtension {
       windowID,
     );
 
-    await this.setTopRightPosition();
+    await this.setTopBottomPosition();
 
     const disposeCallback = PLMainAPI.windowProcessManagementService.on(
       windowID as any,
@@ -173,6 +180,7 @@ class PaperlibAIChatExtension extends PLExtension {
           PLMainAPI.windowProcessManagementService.destroy(windowID);
           disposeCallback();
           disposeMoveCallback();
+          disposePinCallback();
         }
       },
     );
@@ -186,8 +194,18 @@ class PaperlibAIChatExtension extends PLExtension {
       },
     );
 
+    const disposePinCallback = PLMainAPI.windowProcessManagementService.on(
+      windowID,
+      (newValues: { value: string }) => {
+        if (newValues.value === "pin-window") {
+          this.setTopBottomPosition();
+        }
+      },
+    );
+
     this.disposeCallbacks.push(disposeCallback);
     this.disposeCallbacks.push(disposeMoveCallback);
+    this.disposeCallbacks.push(disposePinCallback);
   }
 
   async dispose() {
