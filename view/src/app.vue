@@ -26,6 +26,26 @@ const curPaperEntity = ref<
 
 const messageList = ref([...INIT_MESSAGE_LIST]);
 
+const msgInputRef = ref<HTMLInputElement | null>(null);
+
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (event.code === "Enter") {
+    sendMessage(event);
+  }
+};
+
+const handleMsgInputFocus = () => {
+  if (msgInputRef.value) {
+    msgInputRef.value.addEventListener("keydown", handleKeyDown);
+  }
+};
+
+const handleMsgInputBlur = () => {
+  if (msgInputRef.value) {
+    msgInputRef.value.removeEventListener("keydown", handleKeyDown);
+  }
+};
+
 const loadPaperText = async () => {
   messageList.value = [...INIT_MESSAGE_LIST];
   const selectedIds = (await PLAPI.uiStateService.getState(
@@ -48,7 +68,7 @@ const closeWindow = () => {
   );
 };
 
-const sendMessage = async (event: Event) => {
+const sendMessage = async (event: KeyboardEvent) => {
   const msg = (event.target as HTMLInputElement).value;
   if (msg === "") return;
   (event.target as HTMLInputElement).value = "";
@@ -134,7 +154,9 @@ onMounted(() => {
         type="text"
         id="msg-input"
         class="w-full p-2 bg-neutral-200 rounded-md grow outline-none text-sm"
-        @keypress.enter="sendMessage($event)"
+        ref="msgInputRef"
+        @focus="handleMsgInputFocus"
+        @blur="handleMsgInputBlur"
       />
       <div
         class="flex-none flex content-center items-center px-3 bg-neutral-200 rounded-md text-sm cursor-pointer"
