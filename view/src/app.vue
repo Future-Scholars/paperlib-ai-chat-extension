@@ -27,6 +27,13 @@ const curPaperEntity = ref<
 const messageList = ref([...INIT_MESSAGE_LIST]);
 
 const msgInputRef = ref<HTMLInputElement | null>(null);
+const msgListRef = ref<HTMLDivElement | null>(null);
+
+const scrollMsgListToBottom = () => {
+  if (msgListRef.value) {
+    msgListRef.value.scrollTop = msgListRef.value.scrollHeight;
+  }
+};
 
 const handleKeyDown = (event: KeyboardEvent) => {
   if (event.code === "Enter") {
@@ -86,17 +93,18 @@ const sendMessage = async (event: KeyboardEvent) => {
     time: new Date().toLocaleString(),
   });
 
+  scrollMsgListToBottom();
+
   const context = await chatService.retrieveContext(msg);
 
-  console.log("$context", context);
-  const anwser = await chatService.queryLLM(msg, context);
+  const answer = await chatService.queryLLM(msg, context);
   const targetIndex = messageList.value.findIndex(
     (item) => item.id === receivedMsgId,
   );
   if (targetIndex !== -1) {
     messageList.value[targetIndex] = {
       id: crypto.randomUUID(),
-      content: anwser || "Something wrong!",
+      content: answer || "Something wrong!",
       sender: "system",
       time: new Date().toLocaleString(),
     };
@@ -128,7 +136,11 @@ onMounted(() => {
         <span class="italic truncate">{{ curPaperEntity.publication }}</span>
       </div>
     </div>
-    <div id="msg-list" class="grow py-2 text-sm space-y-2 overflow-scroll">
+    <div
+      id="msg-list"
+      class="grow py-2 text-sm space-y-2 overflow-scroll"
+      ref="msgListRef"
+    >
       <div v-for="msg in messageList" :key="msg.id" class="flex space-x-2">
         <div
           v-if="msg.sender === 'system'"
