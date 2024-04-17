@@ -26,6 +26,9 @@ devDependencies:
   autoprefixer:
     specifier: ^10.4.16
     version: 10.4.19(postcss@8.4.38)
+  bootstrap-icons-vue:
+    specifier: ^1.11.3
+    version: 1.11.3
   compute-cosine-similarity:
     specifier: ^1.1.0
     version: 1.1.0
@@ -1094,6 +1097,10 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /bootstrap-icons-vue@1.11.3:
+    resolution: {integrity: sha512-Xba1GTDYon8KYSDTKiiAtiyfk4clhdKQYvCQPMkE58+F5loVwEmh0Wi+ECCfowNc9SGwpoSLpSkvg7rhgZBttw==}
+    dev: true
 
   /brace-expansion@1.1.11:
     resolution: {integrity: sha512-iCuPHDFgrHX7H2vEI/5xpz07zSHB00TpugqhmYtVmMO6518mCuRMoOYFldEBl0g187ufozdaHgWKcYFb61qGiA==}
