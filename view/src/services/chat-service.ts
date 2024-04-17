@@ -43,8 +43,6 @@ export class ChatService {
 
     const pagetexts = await getFullText(url);
 
-    console.log(pagetexts);
-
     this._embeddings = [];
     for (const pagetext of pagetexts) {
       const words = pagetext.split(" ");
@@ -58,8 +56,6 @@ export class ChatService {
         this._embeddings.push({ text: paragraph, embedding });
       }
     }
-
-    console.log(this._embeddings);
   }
 
   async retrieveContext(text: string) {

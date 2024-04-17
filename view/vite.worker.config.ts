@@ -31,12 +31,13 @@ export default defineConfig({
     esbuildOptions: {
       target: "es2022",
       tsconfig: "tsconfig.json",
+      keepNames: false,
     },
   },
 
   esbuild: {
     target: "es2022",
-    keepNames: true,
+    keepNames: false,
   },
 
   resolve: {},

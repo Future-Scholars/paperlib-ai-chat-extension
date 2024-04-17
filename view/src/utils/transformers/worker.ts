@@ -11,6 +11,7 @@ env.backends.onnx.wasm.wasmPaths = self.location.href.replace(
   "assets/worker.js",
   "/transformersWasm/",
 );
+env.backends.onnx.wasm.numThreads = 4;
 
 // Define task function mapping
 const TASK_FUNCTION_MAPPING = {
