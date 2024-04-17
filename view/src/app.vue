@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { PLAPI, PLExtAPI, PLExtension, PLMainAPI } from "paperlib-api/api";
+import { PLAPI, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
 import { disposable } from "@/base/dispose.ts";
+import { processId } from "paperlib-api/utils";
 
 const INIT_MESSAGE_LIST = [
   {
@@ -73,6 +74,7 @@ const closeWindow = () => {
   PLMainAPI.windowProcessManagementService.forceClose(
     "paperlib-ai-chat-extension-window",
   );
+  PLMainAPI.windowProcessManagementService.focus(processId.renderer);
 };
 
 const sendMessage = async (event: KeyboardEvent) => {
