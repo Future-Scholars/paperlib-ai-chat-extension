@@ -87,8 +87,8 @@ class PaperlibAIChatExtension extends PLExtension {
       await PLMainAPI.windowProcessManagementService.getBounds(windowID);
     if (parentBounds && currentBounds) {
       let x = 0;
-      let y = parentBounds.y + this.parentWindowHeaderHeight;
-      x = parentBounds.x + parentBounds.width - currentBounds.width;
+      let y = parentBounds.y + this.parentWindowHeaderHeight - 10;
+      x = parentBounds.x + parentBounds.width - currentBounds.width - 10;
       await PLMainAPI.windowProcessManagementService.setBounds(windowID, {
         x,
         y,
@@ -145,6 +145,7 @@ class PaperlibAIChatExtension extends PLExtension {
       await PLMainAPI.windowProcessManagementService.exist(windowID);
 
     if (existed) {
+      await PLMainAPI.windowProcessManagementService.show(windowID);
       await PLMainAPI.windowProcessManagementService.focus(windowID);
       return;
     }
