@@ -4,7 +4,11 @@ import { PLAPI, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
 import { disposable } from "@/base/dispose.ts";
 import { processId } from "paperlib-api/utils";
-import { BIconX, BIconPin, BIconPinFill } from "bootstrap-icons-vue";
+import {
+  BIconX,
+  BIconBoxArrowUpRight,
+  BIconBoxArrowInDownLeft,
+} from "bootstrap-icons-vue";
 
 const windowID = "paperlib-ai-chat-extension-window";
 
@@ -12,10 +16,10 @@ const INIT_MESSAGE_LIST = [
   {
     id: crypto.randomUUID(),
     content:
-      "Hello, you can ask me anything about this paper. I will try my best to anwser you.",
+      "Hello, you can ask me anything about this paper. I will try my best to anwser you. Please make sure you have set the API key in the settings.",
     sender: "system",
     time: "2021-10-10 10:10:10",
-  },
+  }
 ];
 
 // Show some information about the paper
@@ -34,6 +38,7 @@ const msgInputRef = ref<HTMLInputElement | null>(null);
 const msgListRef = ref<HTMLDivElement | null>(null);
 
 const pinned = ref(true);
+const ready = ref(false);
 
 const scrollMsgListToBottom = () => {
   if (msgListRef.value) {
@@ -60,9 +65,17 @@ const handleMsgInputBlur = () => {
 };
 
 const loadPaperText = async () => {
+  ready.value = false;
   messageList.value = [...INIT_MESSAGE_LIST];
+  messageList.value.push({
+    id: crypto.randomUUID(),
+    content: "I'm loading this pape... It may take a few seconds to several minutes to embed the paper's content...",
+    sender: "system",
+    time: new Date().toLocaleString(),
+  });
+
   const selectedIds = (await PLAPI.uiStateService.getState(
-    "selectedIds",
+    "selectedIds"
   )) as string[];
 
   const loadResults = await PLAPI.paperService.loadByIds(selectedIds);
@@ -72,12 +85,20 @@ const loadPaperText = async () => {
     curPaperEntity.value = paperEntity;
     await chatService.loadPaperEntity(paperEntity);
     await chatService.initializeEncoder();
+
+    ready.value = true;
+    messageList.value.push({
+      id: crypto.randomUUID(),
+      content: "The paper has been loaded successfully! You can start asking questions now.",
+      sender: "system",
+      time: new Date().toLocaleString(),
+    });
   }
 };
 
 const closeWindow = () => {
   PLMainAPI.windowProcessManagementService.forceClose(
-    "paperlib-ai-chat-extension-window",
+    "paperlib-ai-chat-extension-window"
   );
   if (pinned.value) {
     PLMainAPI.windowProcessManagementService.focus(processId.renderer);
@@ -108,7 +129,7 @@ const sendMessage = async (event: KeyboardEvent) => {
 
   const answer = await chatService.queryLLM(msg, context);
   const targetIndex = messageList.value.findIndex(
-    (item) => item.id === receivedMsgId,
+    (item) => item.id === receivedMsgId
   );
   if (targetIndex !== -1) {
     messageList.value[targetIndex] = {
@@ -125,12 +146,12 @@ const unpin = async () => {
   await nextTick(async () => {
     await PLMainAPI.windowProcessManagementService.setParentWindow(
       null,
-      windowID,
+      windowID
     );
     await PLMainAPI.windowProcessManagementService.center(windowID);
     await PLMainAPI.windowProcessManagementService.setAlwaysOnTop(
       windowID,
-      true,
+      true
     );
   });
 };
@@ -139,22 +160,22 @@ const pin = async () => {
   pinned.value = true;
   await PLMainAPI.windowProcessManagementService.setParentWindow(
     processId.renderer,
-    windowID,
+    windowID
   );
   await PLMainAPI.windowProcessManagementService.fire({
     [windowID]: "pin-window",
   });
   await PLMainAPI.windowProcessManagementService.setAlwaysOnTop(
     windowID,
-    false,
+    false
   );
 };
 
 disposable(
   PLAPI.uiStateService.onChanged(
     ["selectedIndex", "entitiesReloaded"],
-    loadPaperText,
-  ),
+    loadPaperText
+  )
 );
 
 onMounted(() => {
@@ -163,51 +184,45 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col">
-    <div
-      class="flex h-8 bg-neutral-200 justify-center items-center w-full text-xs font-semibold"
-    >
-      <div class="flex-1 justify-center items-center draggable">
-        <div class="pl-2">AI Chat</div>
-      </div>
-      <div class="flex flex-row justify-center items-center">
+  <div class="h-screen flex flex-col bg-neutral-50">
+      <div id="title-bar" class="flex flex-none space-x-2 w-full pt-3 pl-3 pr-3">
         <div
-          v-if="pinned"
-          class="flex w-10 h-8 hover:bg-neutral-300 transition ease-in-out justify-center items-center"
-          @click="unpin"
+          id="paper-info-bar"
+          class="text-neutral-800 grow truncate bg-neutral-300 rounded-md h-8 items-center flex cursor-pointer select-none"
+          :class="pinned ? '': 'draggable'"
+          :title="`${curPaperEntity.authors} - ${curPaperEntity.publication} - ${curPaperEntity.pubTime}`"
         >
-          <BIconPinFill class="text-sm" />
+          <span class="font-medium truncate text-sm px-2">{{
+            curPaperEntity.title
+          }}</span>
         </div>
-        <div
-          v-else
-          class="flex w-10 h-8 hover:bg-neutral-300 transition ease-in-out justify-center items-center"
-          @click="pin"
-        >
-          <BIconPin class="text-sm" />
-        </div>
-        <div
-          class="flex w-10 h-8 text-neutral-500 hover:bg-red-600 transition ease-in-out hover:text-neutral-200 justify-center items-center"
-          @click="closeWindow"
-        >
-          <BIconX class="text-lg" />
-        </div>
-      </div>
-    </div>
-    <div class="flex flex-col p-4 bg-neutral-50 flex-1">
-      <div
-        id="paper-info-bar"
-        class="flex flex-col flex-none bg-neutral-200 px-2 py-2 text-neutral-800 rounded-md space-y-1"
-      >
-        <span class="font-semibold truncate">{{ curPaperEntity.title }}</span>
-        <span class="text-xs truncate">{{ curPaperEntity.authors }}</span>
-        <div class="flex space-x-2 text-xs">
-          <span>{{ curPaperEntity.pubTime }}</span>
-          <span class="italic truncate">{{ curPaperEntity.publication }}</span>
+        <div class="flex space-x-1 font-semibold text-neutral-700 flex-none">
+          <div
+            v-if="pinned"
+            class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200"
+            @click="unpin"
+          >
+            <BIconBoxArrowUpRight class="text-xs m-auto" />
+          </div>
+          <div
+            v-else
+            class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200"
+            @click="pin"
+          >
+            <BIconBoxArrowInDownLeft class="text-sm m-auto" />
+          </div>
+          <div
+            class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200"
+            @click="closeWindow"
+          >
+            <BIconX class="text-lg m-auto" />
+          </div>
         </div>
       </div>
+      <hr class="my-3 mx-3 flex-none" />
       <div
         id="msg-list"
-        class="grow py-2 text-sm space-y-2 overflow-scroll"
+        class="grow px-3 text-sm space-y-2 overflow-scroll"
         ref="msgListRef"
       >
         <div v-for="msg in messageList" :key="msg.id" class="flex space-x-2">
@@ -223,30 +238,34 @@ onMounted(() => {
           </div>
           <div v-else class="flex-none flex justify-end w-full">
             <div
-              class="flex-none bg-cyan-100 p-2 rounded-t-lg rounded-bl-lg max-w-[75%]"
+              class="flex-none bg-neutral-500 p-2 rounded-t-lg rounded-bl-lg max-w-[75%] text-neutral-50"
             >
               <span>{{ msg.content }}</span>
             </div>
           </div>
         </div>
       </div>
-      <div id="input-box " class="flex-none flex space-x-2 text-neutral-800">
+      <div
+        id="input-box "
+        class="flex-none flex space-x-2 text-neutral-800 mx-3 my-3"
+      >
         <input
           type="text"
           id="msg-input"
           class="w-full p-2 bg-neutral-200 rounded-md grow outline-none text-sm"
+          :placeholder="ready ? `Type your question here...` : `Please wait, loading paper...`"
           ref="msgInputRef"
+          :disabled="!ready"
           @focus="handleMsgInputFocus"
           @blur="handleMsgInputBlur"
         />
       </div>
-    </div>
   </div>
 </template>
 
 <style>
 .draggable {
-  -webkit-user-select: none;
+  user-select: none;
   -webkit-app-region: drag;
 }
 </style>
