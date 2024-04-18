@@ -46,7 +46,6 @@ export class EncoderService {
     for (let i = 0; i < embeddings.length; i++) {
       const { text: mostSimilarText, embedding } = embeddings[i];
       const cosine_sim = similarity(textEmbedding, embedding) || -1;
-      console.log(cosine_sim, similarity(textEmbedding, embedding));
       if (cosine_sim > maxSimilarity) {
         maxSimilarity = cosine_sim;
         maxIndex = i;
