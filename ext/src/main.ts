@@ -165,7 +165,13 @@ class PaperlibAIChatExtension extends PLExtension {
       },
       frame: false,
       show: true,
-    });
+    },
+      undefined,
+      {
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'require-corp'
+      }
+    );
 
     await PLMainAPI.windowProcessManagementService.setParentWindow(
       processId.renderer,
