@@ -6,7 +6,7 @@ import { LLMService } from "./llm-service";
 
 export class ChatService {
   paperEntity?: PaperEntity;
-  private _embeddings: { text: string, embedding: number[] }[] = [];
+  private _embeddings: { text: string; embedding: number[] }[] = [];
 
   private readonly _encoderService: EncoderService;
   private readonly _llmService: LLMService;
@@ -16,12 +16,9 @@ export class ChatService {
     this._llmService = new LLMService();
   }
 
-  async loadPaperEntity(paperEntityId: string) {
-    const loadResults = await PLAPI.paperService.loadByIds([paperEntityId]);
-    const paperEntity = loadResults.length > 0 ? loadResults[0] : undefined;
-
+  async loadPaperEntity(paperEntity: PaperEntity) {
     if (!paperEntity) {
-      throw new Error('Paper entity not found');
+      throw new Error("Paper entity not found");
     }
 
     this.paperEntity = paperEntity;
@@ -29,7 +26,7 @@ export class ChatService {
 
   async initializeEncoder() {
     if (!this.paperEntity) {
-      throw new Error('Paper entity not loaded');
+      throw new Error("Paper entity not loaded");
     }
 
     // 1. Load fulltext of the paper.
@@ -39,24 +36,19 @@ export class ChatService {
         "Failed to access the main URL of the paper entity.",
         this.paperEntity.mainURL,
         true,
-        "AIChatExt"
-      )
-      return
+        "AIChatExt",
+      );
+      return;
     }
 
     const pagetexts = await getFullText(url);
 
-    console.log(pagetexts);
-
-    // 2. Encode the fulltext into vectors.
-    await this._encoderService.loadEncoder();
-
     this._embeddings = [];
     for (const pagetext of pagetexts) {
-      const words = pagetext.split(' ');
+      const words = pagetext.split(" ");
       const paragraphs: string[] = [];
       for (let i = 0; i < words.length; i += 256) {
-        paragraphs.push(words.slice(i, i + 256).join(' '));
+        paragraphs.push(words.slice(i, i + 256).join(" "));
       }
 
       for (const paragraph of paragraphs) {
@@ -64,13 +56,11 @@ export class ChatService {
         this._embeddings.push({ text: paragraph, embedding });
       }
     }
-
-    console.log(this._embeddings);
   }
 
   async retrieveContext(text: string) {
     if (!this.paperEntity) {
-      throw new Error('Paper entity not loaded');
+      throw new Error("Paper entity not loaded");
     }
 
     return await this._encoderService.retrieve(text, this._embeddings);

@@ -28,6 +28,7 @@
     "src/**/*.tsx",
     "src/**/*.d.ts",
     "tests/**/*.ts",
-    "package.json"
+    "package.json",
+    "../common/utils.ts"
   ]
 }

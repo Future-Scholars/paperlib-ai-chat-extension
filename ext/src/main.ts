@@ -1,15 +1,22 @@
 import { PLAPI, PLExtAPI, PLExtension, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
+import { processId } from "paperlib-api/utils";
 import path from "path";
+
+const extID = "@future-scholars/paperlib-ai-chat-extension";
+
+const windowID = "paperlib-ai-chat-extension-window";
+
+const openChatMenuItemId = "open-ai-chat";
 
 class PaperlibAIChatExtension extends PLExtension {
   disposeCallbacks: (() => void)[];
-
-  private readonly _windowIDs: string[];
+  private parentWindowHeaderHeight = 36;
+  private timer: NodeJS.Timeout | null = null;
 
   constructor() {
     super({
-      id: "@future-scholars/paperlib-ai-chat-extension",
+      id: extID,
       defaultPreference: {
         "ai-model": {
           type: "options",
@@ -52,7 +59,42 @@ class PaperlibAIChatExtension extends PLExtension {
     });
 
     this.disposeCallbacks = [];
-    this._windowIDs = [];
+  }
+
+  async debounceSetTopRightPosition() {
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+    this.timer = setTimeout(() => {
+      this.setTopBottomPosition();
+      this.timer = null;
+    }, 300);
+  }
+
+  async setTopBottomPosition() {
+    const isChildWindow =
+      await PLMainAPI.windowProcessManagementService.hasParentWindow(windowID);
+
+    if (!isChildWindow) {
+      return;
+    }
+
+    const parentBounds =
+      await PLMainAPI.windowProcessManagementService.getBounds(
+        processId.renderer,
+      );
+    const currentBounds =
+      await PLMainAPI.windowProcessManagementService.getBounds(windowID);
+    if (parentBounds && currentBounds) {
+      let x = 0;
+      let y = parentBounds.y + this.parentWindowHeaderHeight - 10;
+      x = parentBounds.x + parentBounds.width - currentBounds.width - 10;
+      await PLMainAPI.windowProcessManagementService.setBounds(windowID, {
+        x,
+        y,
+        height: parentBounds.height - this.parentWindowHeaderHeight,
+      });
+    }
   }
 
   async initialize() {
@@ -77,66 +119,109 @@ class PaperlibAIChatExtension extends PLExtension {
         event: "@future-scholars/paperlib-ai-chat-extension:start",
       }),
     );
+
+    PLMainAPI.contextMenuService.registerContextMenu(this.id, [
+      {
+        id: openChatMenuItemId,
+        label: "AIChatExt - open",
+      },
+    ]);
+
+    this.disposeCallbacks.push(
+      PLMainAPI.contextMenuService.on(
+        "dataContextMenuFromExtensionsClicked",
+        (value) => {
+          const { extID, itemID } = value.value;
+          if (extID === this.id && itemID === openChatMenuItemId) {
+            this._startChat();
+          }
+        },
+      ),
+    );
   }
 
   private async _createChatWindow(paperEntity: PaperEntity) {
-    // TODO: fix here
-    const windowID = `paperlib-ai-chat-extension-window`;
+    const existed =
+      await PLMainAPI.windowProcessManagementService.exist(windowID);
 
-    if (this._windowIDs.includes(windowID)) {
-      // Show
-      PLMainAPI.windowProcessManagementService.show(windowID);
-    } else {
-      // Create
-      const screenSize =
-        await PLMainAPI.windowProcessManagementService.getScreenSize();
-      await PLMainAPI.windowProcessManagementService.create(windowID, {
-        entry: path.resolve(__dirname, "./view/index.html"),
-        title: "Discuss with LLM",
-        width: 300,
-        height: 400,
-        minWidth: 300,
-        minHeight: 400,
-        useContentSize: true,
-        center: true,
-        resizable: true,
-        skipTaskbar: true,
-        webPreferences: {
-          webSecurity: false,
-          nodeIntegration: true,
-          contextIsolation: false,
-        },
-        frame: false,
-        show: true,
-      });
-
-      this._windowIDs.push(windowID);
-
-      const disposeCallback = PLMainAPI.windowProcessManagementService.on(
-        windowID as any,
-        (newValues: { value: string }) => {
-          if (newValues.value === "close") {
-            PLMainAPI.windowProcessManagementService.destroy(windowID);
-            this._windowIDs.splice(this._windowIDs.indexOf(windowID), 1);
-            disposeCallback();
-          }
-        },
-      );
-
-      this.disposeCallbacks.push(disposeCallback);
+    if (existed) {
+      await PLMainAPI.windowProcessManagementService.show(windowID);
+      await PLMainAPI.windowProcessManagementService.focus(windowID);
+      return;
     }
+
+    await PLMainAPI.windowProcessManagementService.create(windowID, {
+      entry: path.resolve(__dirname, "./view/index.html"),
+      title: "Discuss with LLM",
+      width: 300,
+      useContentSize: true,
+      center: true,
+      resizable: true,
+      skipTaskbar: true,
+      webPreferences: {
+        webSecurity: false,
+        nodeIntegration: true,
+        contextIsolation: false,
+      },
+      frame: false,
+      show: true,
+    },
+      undefined,
+      {
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'require-corp'
+      }
+    );
+
+    await PLMainAPI.windowProcessManagementService.setParentWindow(
+      processId.renderer,
+      windowID,
+    );
+
+    await this.setTopBottomPosition();
+
+    const disposeCallback = PLMainAPI.windowProcessManagementService.on(
+      windowID as any,
+      (newValues: { value: string }) => {
+        if (newValues.value === "close") {
+          PLMainAPI.windowProcessManagementService.destroy(windowID);
+          disposeCallback();
+          disposeMoveCallback();
+          disposePinCallback();
+        }
+      },
+    );
+
+    const disposeMoveCallback = PLMainAPI.windowProcessManagementService.on(
+      processId.renderer as any,
+      (newValues: { value: string }) => {
+        if (newValues.value === "move" || newValues.value === "resize") {
+          this.debounceSetTopRightPosition();
+        }
+      },
+    );
+
+    const disposePinCallback = PLMainAPI.windowProcessManagementService.on(
+      windowID,
+      (newValues: { value: string }) => {
+        if (newValues.value === "pin-window") {
+          this.setTopBottomPosition();
+        }
+      },
+    );
+
+    this.disposeCallbacks.push(disposeCallback);
+    this.disposeCallbacks.push(disposeMoveCallback);
+    this.disposeCallbacks.push(disposePinCallback);
   }
 
   async dispose() {
     for (const disposeCallback of this.disposeCallbacks) {
       disposeCallback();
     }
-    PLExtAPI.extensionPreferenceService.unregister(this.id);
-    for (const windowID of this._windowIDs) {
-      try{
-        await PLMainAPI.windowProcessManagementService.destroy(windowID);
-      } catch (error) {}
-    }
+    PLMainAPI.contextMenuService.unregisterContextMenu(extID);
+    PLExtAPI.extensionPreferenceService.unregister(extID);
+    await PLMainAPI.windowProcessManagementService.destroy(windowID);
   }
 
   private async _startChat() {
