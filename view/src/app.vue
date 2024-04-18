@@ -74,12 +74,11 @@ const loadPaperText = async () => {
     time: new Date().toLocaleString(),
   });
 
-  const selectedIds = (await PLAPI.uiStateService.getState(
-    "selectedIds"
-  )) as string[];
+  const selectedPaperEntities = (await PLAPI.uiStateService.getState(
+    "selectedPaperEntities"
+  )) as PaperEntity[];
 
-  const loadResults = await PLAPI.paperService.loadByIds(selectedIds);
-  const paperEntity = loadResults.length > 0 ? loadResults[0] : undefined;
+  const paperEntity = selectedPaperEntities.length > 0 ? selectedPaperEntities[0] : undefined;
 
   if (paperEntity) {
     curPaperEntity.value = paperEntity;
@@ -173,7 +172,7 @@ const pin = async () => {
 
 disposable(
   PLAPI.uiStateService.onChanged(
-    ["selectedIndex", "entitiesReloaded"],
+    ["selectedPaperEntities"],
     loadPaperText
   )
 );
