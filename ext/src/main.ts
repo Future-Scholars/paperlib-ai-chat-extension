@@ -2,6 +2,7 @@ import { PLAPI, PLExtAPI, PLExtension, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
 import { processId } from "paperlib-api/utils";
 import path from "path";
+import { Worker } from "worker_threads";
 
 const extID = "@future-scholars/paperlib-ai-chat-extension";
 
@@ -98,6 +99,19 @@ class PaperlibAIChatExtension extends PLExtension {
   }
 
   async initialize() {
+    const workerPath = path.join("assets", "worker.js");
+
+    console.log("$world", process.cwd());
+
+    const url = new URL(workerPath, import.meta.url);
+    const worker = new Worker(url);
+
+    worker.on("message", (e) => {
+      console.log(e.data); // "hiya!"
+    });
+
+    worker.postMessage("hello");
+
     await PLExtAPI.extensionPreferenceService.register(
       this.id,
       this.defaultPreference,
@@ -150,27 +164,29 @@ class PaperlibAIChatExtension extends PLExtension {
       return;
     }
 
-    await PLMainAPI.windowProcessManagementService.create(windowID, {
-      entry: path.resolve(__dirname, "./view/index.html"),
-      title: "Discuss with LLM",
-      width: 300,
-      useContentSize: true,
-      center: true,
-      resizable: true,
-      skipTaskbar: true,
-      webPreferences: {
-        webSecurity: false,
-        nodeIntegration: true,
-        contextIsolation: false,
+    await PLMainAPI.windowProcessManagementService.create(
+      windowID,
+      {
+        entry: path.resolve(__dirname, "./view/index.html"),
+        title: "Discuss with LLM",
+        width: 300,
+        useContentSize: true,
+        center: true,
+        resizable: true,
+        skipTaskbar: true,
+        webPreferences: {
+          webSecurity: false,
+          nodeIntegration: true,
+          contextIsolation: false,
+        },
+        frame: false,
+        show: true,
       },
-      frame: false,
-      show: true,
-    },
       undefined,
       {
-        'Cross-Origin-Opener-Policy': 'same-origin',
-        'Cross-Origin-Embedder-Policy': 'require-corp'
-      }
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Embedder-Policy": "require-corp",
+      },
     );
 
     await PLMainAPI.windowProcessManagementService.setParentWindow(

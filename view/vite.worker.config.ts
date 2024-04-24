@@ -1,6 +1,7 @@
 import path from "node:path";
 import commonjs from "@rollup/plugin-commonjs";
 import { defineConfig } from "vite";
+import { builtinModules } from "module";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -9,6 +10,7 @@ export default defineConfig({
     minify: false,
     reportCompressedSize: true,
     rollupOptions: {
+      external: [...builtinModules, "@xenova/transformers"],
       input: {
         worker: path.resolve(
           __dirname,
@@ -23,20 +25,20 @@ export default defineConfig({
       },
     },
     outDir: "./dist",
-    target: "es2022",
+    target: "node12",
     emptyOutDir: false,
   },
 
   optimizeDeps: {
     esbuildOptions: {
-      target: "es2022",
+      target: "node12",
       tsconfig: "tsconfig.json",
       keepNames: false,
     },
   },
 
   esbuild: {
-    target: "es2022",
+    target: "node12",
     keepNames: false,
   },
 
