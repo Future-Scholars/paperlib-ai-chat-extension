@@ -65,6 +65,7 @@ async function featureExtraction(data: { text: string }) {
 
 // Listen for messages from UI
 parentPort?.on("message", async (event) => {
+  console.log("$event", event);
   const data = event.data;
   let fn = TASK_FUNCTION_MAPPING[data.task];
 

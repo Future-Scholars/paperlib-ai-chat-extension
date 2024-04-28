@@ -19,6 +19,6 @@ fs.writeFileSync(path.resolve(__dirname, "..", "dist", "package.json"), JSON.str
 execSync("npm install --production", {cwd: path.resolve(__dirname, "..", "dist")})
 
 
-fs.rmSync(path.resolve(__dirname, "..", "dist", "node_modules", "onnxruntime-web"), {force: true, recursive: true})
+// fs.rmSync(path.resolve(__dirname, "..", "dist", "node_modules", "onnxruntime-web"), {force: true, recursive: true})
 
 
