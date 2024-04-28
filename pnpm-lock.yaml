@@ -39,8 +39,8 @@ devDependencies:
     specifier: ^1.1.5
     version: 1.1.5
   paperlib-api:
-    specifier: ^0.1.7
-    version: 0.1.7(typescript@5.4.3)(vue@3.4.21)
+    specifier: ^0.1.8
+    version: 0.1.8(typescript@5.4.3)(vue@3.4.21)
   pdfjs-dist:
     specifier: ^4.0.269
     version: 4.0.379
@@ -2990,8 +2990,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /paperlib-api@0.1.7(typescript@5.4.3)(vue@3.4.21):
-    resolution: {integrity: sha512-Wkb0p20Mty/C7XWvUsOBPMqiQFmlhtP7TFJXSlM1PB+TpaX0LUDDOz/U0rblygW1luGZPLVtbXY2+HPTvWPhnA==}
+  /paperlib-api@0.1.8(typescript@5.4.3)(vue@3.4.21):
+    resolution: {integrity: sha512-2o3hwugDQ2brGpX7W6kWr9IBrkBhU59LUyodgSXZpVmKZNLYWMCgaC7Rlp86pCTAZ+5RBuBLmKvWXQiLRLnwew==}
     engines: {node: '>=18.16.1'}
     dependencies:
       citation-js: 0.6.4
