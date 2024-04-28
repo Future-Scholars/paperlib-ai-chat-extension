@@ -1,4 +1,4 @@
-const {exec}= require("child_process")
+const {execSync} = require("child_process")
 const fs = require("fs")
 const path = require("path");
 
@@ -14,9 +14,11 @@ pkg.dependencies = {
 pkg.devDependencies = {}
 
 
-fs.writeFileSync(path.resolve(__dirname,"..","dist","package.json"),JSON.stringify(pkg))
+fs.writeFileSync(path.resolve(__dirname, "..", "dist", "package.json"), JSON.stringify(pkg))
 
-exec("npm install --production",{cwd:path.resolve(__dirname,"..","dist")})
+execSync("npm install --production", {cwd: path.resolve(__dirname, "..", "dist")})
 
+
+fs.rmSync(path.resolve(__dirname, "..", "dist", "node_modules", "onnxruntime-web"), {force: true, recursive: true})
 
 
