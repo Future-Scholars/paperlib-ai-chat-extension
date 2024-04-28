@@ -106,11 +106,11 @@ class PaperlibAIChatExtension extends PLExtension {
     const url = new URL(workerPath, import.meta.url);
     const worker = new Worker(url);
 
-    worker.on("message", (e) => {
-      console.log(e.data); // "hiya!"
+    worker.on("message", (data) => {
+      console.log("$rData", data); // "hiya!"
     });
 
-    worker.postMessage("hello");
+    worker.postMessage({ text: "hello", task: "feature-extraction" });
 
     await PLExtAPI.extensionPreferenceService.register(
       this.id,
