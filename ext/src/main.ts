@@ -14,6 +14,7 @@ class PaperlibAIChatExtension extends PLExtension {
   disposeCallbacks: (() => void)[];
   private parentWindowHeaderHeight = 36;
   private timer: NodeJS.Timeout | null = null;
+  private worker: Worker | null = null;
 
   constructor() {
     super({
@@ -98,19 +99,24 @@ class PaperlibAIChatExtension extends PLExtension {
     }
   }
 
+  async encode(text: string): Promise<number[]> {
+    this.worker?.postMessage({ text, task: "feature-extraction" });
+    return new Promise((resolver) => {
+      const handleMessage = (message: { type: string; data: number[] }) => {
+        if (message.type == "feature-extraction") {
+          resolver(message.data);
+          this.worker?.removeListener("message", handleMessage);
+        }
+      };
+
+      this.worker?.on("message", handleMessage);
+    });
+  }
+
   async initialize() {
     const workerPath = path.join("assets", "worker.js");
-
-    console.log("$world", process.cwd());
-
     const url = new URL(workerPath, import.meta.url);
-    const worker = new Worker(url);
-
-    worker.on("message", (data) => {
-      console.log("$rData", data); // "hiya!"
-    });
-
-    worker.postMessage({ text: "hello", task: "feature-extraction" });
+    this.worker = new Worker(url);
 
     await PLExtAPI.extensionPreferenceService.register(
       this.id,
