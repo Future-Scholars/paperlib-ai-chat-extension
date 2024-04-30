@@ -244,6 +244,7 @@ class PaperlibAIChatExtension extends PLExtension {
     PLMainAPI.contextMenuService.unregisterContextMenu(extID);
     PLExtAPI.extensionPreferenceService.unregister(extID);
     await PLMainAPI.windowProcessManagementService.destroy(windowID);
+    this.worker?.terminate();
   }
 
   private async _startChat() {
