@@ -8,6 +8,7 @@ import {
   BIconX,
   BIconBoxArrowUpRight,
   BIconBoxArrowInDownLeft,
+  BIconPauseCircle,
 } from "bootstrap-icons-vue";
 
 const windowID = "paperlib-ai-chat-extension-window";
@@ -19,7 +20,7 @@ const INIT_MESSAGE_LIST = [
       "Hello, you can ask me anything about this paper. I will try my best to anwser you. Please make sure you have set the API key in the settings.",
     sender: "system",
     time: "2021-10-10 10:10:10",
-  }
+  },
 ];
 
 // Show some information about the paper
@@ -39,6 +40,7 @@ const msgListRef = ref<HTMLDivElement | null>(null);
 
 const pinned = ref(true);
 const ready = ref(false);
+const loading = ref(false);
 
 const scrollMsgListToBottom = () => {
   if (msgListRef.value) {
@@ -47,8 +49,10 @@ const scrollMsgListToBottom = () => {
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
-  if (event.code === "Enter") {
-    sendMessage(event);
+  if (ready.value && !loading.value) {
+    if (event.code === "Enter") {
+      sendMessage(event);
+    }
   }
 };
 
@@ -69,16 +73,18 @@ const loadPaperText = async () => {
   messageList.value = [...INIT_MESSAGE_LIST];
   messageList.value.push({
     id: crypto.randomUUID(),
-    content: "I'm loading this pape... It may take a few seconds to several minutes to embed the paper's content...",
+    content:
+      "I'm loading this pape... It may take a few seconds to several minutes to embed the paper's content...",
     sender: "system",
     time: new Date().toLocaleString(),
   });
 
   const selectedPaperEntities = (await PLAPI.uiStateService.getState(
-    "selectedPaperEntities"
+    "selectedPaperEntities",
   )) as PaperEntity[];
 
-  const paperEntity = selectedPaperEntities.length > 0 ? selectedPaperEntities[0] : undefined;
+  const paperEntity =
+    selectedPaperEntities.length > 0 ? selectedPaperEntities[0] : undefined;
 
   if (paperEntity) {
     curPaperEntity.value = paperEntity;
@@ -88,7 +94,8 @@ const loadPaperText = async () => {
     ready.value = true;
     messageList.value.push({
       id: crypto.randomUUID(),
-      content: "The paper has been loaded successfully! You can start asking questions now.",
+      content:
+        "The paper has been loaded successfully! You can start asking questions now.",
       sender: "system",
       time: new Date().toLocaleString(),
     });
@@ -97,7 +104,7 @@ const loadPaperText = async () => {
 
 const closeWindow = () => {
   PLMainAPI.windowProcessManagementService.forceClose(
-    "paperlib-ai-chat-extension-window"
+    "paperlib-ai-chat-extension-window",
   );
   if (pinned.value) {
     PLMainAPI.windowProcessManagementService.focus(processId.renderer);
@@ -105,38 +112,43 @@ const closeWindow = () => {
 };
 
 const sendMessage = async (event: KeyboardEvent) => {
-  const msg = (event.target as HTMLInputElement).value;
-  if (msg === "") return;
-  (event.target as HTMLInputElement).value = "";
-  messageList.value.push({
-    id: crypto.randomUUID(),
-    content: msg,
-    sender: "user",
-    time: new Date().toLocaleString(),
-  });
-  const receivedMsgId = crypto.randomUUID();
-  messageList.value.push({
-    id: receivedMsgId,
-    content: "I am thinking...",
-    sender: "system",
-    time: new Date().toLocaleString(),
-  });
-
-  scrollMsgListToBottom();
-
-  const context = await chatService.retrieveContext(msg);
-
-  const answer = await chatService.queryLLM(msg, context);
-  const targetIndex = messageList.value.findIndex(
-    (item) => item.id === receivedMsgId
-  );
-  if (targetIndex !== -1) {
-    messageList.value[targetIndex] = {
+  try {
+    loading.value = true;
+    const msg = (event.target as HTMLInputElement).value;
+    if (msg === "") return;
+    (event.target as HTMLInputElement).value = "";
+    messageList.value.push({
       id: crypto.randomUUID(),
-      content: answer || "Something wrong!",
+      content: msg,
+      sender: "user",
+      time: new Date().toLocaleString(),
+    });
+    const receivedMsgId = crypto.randomUUID();
+    messageList.value.push({
+      id: receivedMsgId,
+      content: "I am thinking...",
       sender: "system",
       time: new Date().toLocaleString(),
-    };
+    });
+
+    scrollMsgListToBottom();
+
+    const context = await chatService.retrieveContext(msg);
+
+    const answer = await chatService.queryLLM(msg, context);
+    const targetIndex = messageList.value.findIndex(
+      (item) => item.id === receivedMsgId,
+    );
+    if (targetIndex !== -1) {
+      messageList.value[targetIndex] = {
+        id: crypto.randomUUID(),
+        content: answer || "Something wrong!",
+        sender: "system",
+        time: new Date().toLocaleString(),
+      };
+    }
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -145,12 +157,12 @@ const unpin = async () => {
   await nextTick(async () => {
     await PLMainAPI.windowProcessManagementService.setParentWindow(
       null,
-      windowID
+      windowID,
     );
     await PLMainAPI.windowProcessManagementService.center(windowID);
     await PLMainAPI.windowProcessManagementService.setAlwaysOnTop(
       windowID,
-      true
+      true,
     );
   });
 };
@@ -159,22 +171,19 @@ const pin = async () => {
   pinned.value = true;
   await PLMainAPI.windowProcessManagementService.setParentWindow(
     processId.renderer,
-    windowID
+    windowID,
   );
   await PLMainAPI.windowProcessManagementService.fire({
     [windowID]: "pin-window",
   });
   await PLMainAPI.windowProcessManagementService.setAlwaysOnTop(
     windowID,
-    false
+    false,
   );
 };
 
 disposable(
-  PLAPI.uiStateService.onChanged(
-    ["selectedPaperEntities"],
-    loadPaperText
-  )
+  PLAPI.uiStateService.onChanged(["selectedPaperEntities"], loadPaperText),
 );
 
 onMounted(() => {
@@ -184,81 +193,81 @@ onMounted(() => {
 
 <template>
   <div class="h-screen flex flex-col bg-neutral-50">
-      <div id="title-bar" class="flex flex-none space-x-2 w-full pt-3 pl-3 pr-3">
+    <div id="title-bar" class="flex flex-none space-x-2 w-full pt-3 pl-3 pr-3">
+      <div
+        id="paper-info-bar"
+        class="text-neutral-800 grow truncate bg-neutral-300 rounded-md h-8 items-center flex cursor-pointer select-none"
+        :class="pinned ? '' : 'draggable'"
+        :title="`${curPaperEntity.authors} - ${curPaperEntity.publication} - ${curPaperEntity.pubTime}`"
+      >
+        <span class="font-medium truncate text-sm px-2">{{
+          curPaperEntity.title
+        }}</span>
+      </div>
+      <div class="flex space-x-1 font-semibold text-neutral-700 flex-none">
         <div
-          id="paper-info-bar"
-          class="text-neutral-800 grow truncate bg-neutral-300 rounded-md h-8 items-center flex cursor-pointer select-none"
-          :class="pinned ? '': 'draggable'"
-          :title="`${curPaperEntity.authors} - ${curPaperEntity.publication} - ${curPaperEntity.pubTime}`"
+          v-if="pinned"
+          class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200"
+          @click="unpin"
         >
-          <span class="font-medium truncate text-sm px-2">{{
-            curPaperEntity.title
-          }}</span>
+          <BIconBoxArrowUpRight class="text-xs m-auto" />
         </div>
-        <div class="flex space-x-1 font-semibold text-neutral-700 flex-none">
-          <div
-            v-if="pinned"
-            class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200"
-            @click="unpin"
-          >
-            <BIconBoxArrowUpRight class="text-xs m-auto" />
-          </div>
-          <div
-            v-else
-            class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200"
-            @click="pin"
-          >
-            <BIconBoxArrowInDownLeft class="text-sm m-auto" />
-          </div>
-          <div
-            class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200"
-            @click="closeWindow"
-          >
-            <BIconX class="text-lg m-auto" />
-          </div>
+        <div
+          v-else
+          class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200"
+          @click="pin"
+        >
+          <BIconBoxArrowInDownLeft class="text-sm m-auto" />
+        </div>
+        <div
+          class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200"
+          @click="closeWindow"
+        >
+          <BIconX class="text-lg m-auto" />
         </div>
       </div>
-      <hr class="my-3 mx-3 flex-none" />
-      <div
-        id="msg-list"
-        class="grow px-3 text-sm space-y-2 overflow-scroll"
-        ref="msgListRef"
-      >
-        <div v-for="msg in messageList" :key="msg.id" class="flex space-x-2">
+    </div>
+    <hr class="my-3 mx-3 flex-none" />
+    <div
+      id="msg-list"
+      class="grow px-3 text-sm space-y-2 overflow-scroll"
+      ref="msgListRef"
+    >
+      <div v-for="msg in messageList" :key="msg.id" class="flex space-x-2">
+        <div
+          v-if="msg.sender === 'system'"
+          class="flex-none flex justify-start w-full"
+        >
           <div
-            v-if="msg.sender === 'system'"
-            class="flex-none flex justify-start w-full"
+            class="flex-none bg-neutral-200 p-2 rounded-t-lg rounded-br-lg max-w-[75%]"
           >
-            <div
-              class="flex-none bg-neutral-200 p-2 rounded-t-lg rounded-br-lg max-w-[75%]"
-            >
-              <span>{{ msg.content }}</span>
-            </div>
+            <span>{{ msg.content }}</span>
           </div>
-          <div v-else class="flex-none flex justify-end w-full">
-            <div
-              class="flex-none bg-neutral-500 p-2 rounded-t-lg rounded-bl-lg max-w-[75%] text-neutral-50"
-            >
-              <span>{{ msg.content }}</span>
-            </div>
+        </div>
+        <div v-else class="flex-none flex justify-end w-full">
+          <div
+            class="flex-none bg-neutral-500 p-2 rounded-t-lg rounded-bl-lg max-w-[75%] text-neutral-50"
+          >
+            <span>{{ msg.content }}</span>
           </div>
         </div>
       </div>
-      <div
-        id="input-box "
-        class="flex-none flex space-x-2 text-neutral-800 mx-3 my-3"
-      >
-        <input
-          type="text"
-          id="msg-input"
-          class="w-full p-2 bg-neutral-200 rounded-md grow outline-none text-sm"
-          :placeholder="ready ? `Type your question here...` : `Please wait, loading paper...`"
-          ref="msgInputRef"
-          :disabled="!ready"
-          @focus="handleMsgInputFocus"
-          @blur="handleMsgInputBlur"
-        />
-      </div>
+    </div>
+    <div
+      id="input-box "
+      class="flex-none flex space-x-2 text-neutral-800 mx-3 my-3 bg-neutral-200 rounded-md flex-row items-center"
+    >
+      <input
+        type="text"
+        id="msg-input"
+        class="w-full p-2 grow outline-none text-sm bg-transparent"
+        ref="msgInputRef"
+        placeholder="Type your question here..."
+        @focus="handleMsgInputFocus"
+        @blur="handleMsgInputBlur"
+      />
+      <BIconPauseCircle class="pr-1 text-2xl" v-if="loading || !ready" />
+    </div>
   </div>
 </template>
 
