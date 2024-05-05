@@ -8,6 +8,7 @@ import {
   BIconX,
   BIconBoxArrowUpRight,
   BIconBoxArrowInDownLeft,
+  BIconPauseCircle,
 } from "bootstrap-icons-vue";
 
 const windowID = "paperlib-ai-chat-extension-window";
@@ -39,6 +40,7 @@ const msgListRef = ref<HTMLDivElement | null>(null);
 
 const pinned = ref(true);
 const ready = ref(false);
+const loading = ref(false);
 
 const scrollMsgListToBottom = () => {
   if (msgListRef.value) {
@@ -47,8 +49,10 @@ const scrollMsgListToBottom = () => {
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
-  if (event.code === "Enter") {
-    sendMessage(event);
+  if (ready.value && !loading.value) {
+    if (event.code === "Enter") {
+      sendMessage(event);
+    }
   }
 };
 
@@ -108,38 +112,43 @@ const closeWindow = () => {
 };
 
 const sendMessage = async (event: KeyboardEvent) => {
-  const msg = (event.target as HTMLInputElement).value;
-  if (msg === "") return;
-  (event.target as HTMLInputElement).value = "";
-  messageList.value.push({
-    id: crypto.randomUUID(),
-    content: msg,
-    sender: "user",
-    time: new Date().toLocaleString(),
-  });
-  const receivedMsgId = crypto.randomUUID();
-  messageList.value.push({
-    id: receivedMsgId,
-    content: "I am thinking...",
-    sender: "system",
-    time: new Date().toLocaleString(),
-  });
-
-  scrollMsgListToBottom();
-
-  const context = await chatService.retrieveContext(msg);
-
-  const answer = await chatService.queryLLM(msg, context);
-  const targetIndex = messageList.value.findIndex(
-    (item) => item.id === receivedMsgId,
-  );
-  if (targetIndex !== -1) {
-    messageList.value[targetIndex] = {
+  try {
+    loading.value = true;
+    const msg = (event.target as HTMLInputElement).value;
+    if (msg === "") return;
+    (event.target as HTMLInputElement).value = "";
+    messageList.value.push({
       id: crypto.randomUUID(),
-      content: answer || "Something wrong!",
+      content: msg,
+      sender: "user",
+      time: new Date().toLocaleString(),
+    });
+    const receivedMsgId = crypto.randomUUID();
+    messageList.value.push({
+      id: receivedMsgId,
+      content: "I am thinking...",
       sender: "system",
       time: new Date().toLocaleString(),
-    };
+    });
+
+    scrollMsgListToBottom();
+
+    const context = await chatService.retrieveContext(msg);
+
+    const answer = await chatService.queryLLM(msg, context);
+    const targetIndex = messageList.value.findIndex(
+      (item) => item.id === receivedMsgId,
+    );
+    if (targetIndex !== -1) {
+      messageList.value[targetIndex] = {
+        id: crypto.randomUUID(),
+        content: answer || "Something wrong!",
+        sender: "system",
+        time: new Date().toLocaleString(),
+      };
+    }
+  } finally {
+    loading.value = false;
   }
 };
 
