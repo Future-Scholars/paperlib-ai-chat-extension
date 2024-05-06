@@ -1,37 +1,17 @@
 import { FeatureExtractionPipeline } from "@xenova/transformers";
 import similarity from "compute-cosine-similarity";
-
-// Initialise worker
-const workerPath = "worker.js";
-
-const worker = new Worker(new URL(workerPath, import.meta.url), {
-  type: "module",
-});
-
-worker.onerror = (event: ErrorEvent) => {
-  console.error("transformers worker error:", event.error);
-};
+import { PLExtAPI } from "paperlib-api";
 
 export class EncoderService {
   extractor?: FeatureExtractionPipeline;
-
   constructor() {}
 
   encode(text: string): Promise<number[]> {
-    worker.postMessage({ text, task: "feature-extraction" });
-    return new Promise((resolver) => {
-      const handleMessage = (
-        event: MessageEvent<{ type: string; data: number[] }>,
-      ) => {
-        const message = event.data;
-        if (message.type == "feature-extraction") {
-          resolver(message.data);
-          worker.removeEventListener("message", handleMessage);
-        }
-      };
-
-      worker.addEventListener("message", handleMessage);
-    });
+    return PLExtAPI.extensionManagementService.callExtensionMethod(
+      "@future-scholars/paperlib-ai-chat-extension",
+      "encode",
+      text,
+    );
   }
 
   async retrieve(

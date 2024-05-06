@@ -43,12 +43,7 @@ export default defineConfig({
 
   plugins: [
     copy({
-      targets: [
-        {
-          src: "node_modules/@xenova/transformers/dist/*.wasm",
-          dest: "dist/transformersWasm",
-        },
-      ],
+      targets: [],
     }),
     vue(),
     renderer(),
