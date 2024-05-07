@@ -2,6 +2,7 @@ import { PLAPI, PLExtAPI, PLExtension, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
 import { processId } from "paperlib-api/utils";
 import path from "path";
+import { Worker } from "worker_threads";
 
 const extID = "@future-scholars/paperlib-ai-chat-extension";
 
@@ -13,6 +14,7 @@ class PaperlibAIChatExtension extends PLExtension {
   disposeCallbacks: (() => void)[];
   private parentWindowHeaderHeight = 36;
   private timer: NodeJS.Timeout | null = null;
+  private worker: Worker | null = null;
 
   constructor() {
     super({
@@ -30,6 +32,11 @@ class PaperlibAIChatExtension extends PLExtension {
             "gpt-4": "GPT-4",
             "gpt-4-32k": "GPT-4 32K",
             "gpt-4-1106-preview": "GPT-4 1106 Preview",
+            "codellama-70b-instruct": "Perplexity codellama-70b",
+            "mistral-7b-instruct": "Perplexity mistral-7b",
+            "mixtral-8x7b-instruct": "Perplexity mistral-8x7b",
+            "sonar-small-chat": "Perplexity sonar-small-chat",
+            "sonar-medium-chat": "Perplexity sonar-medium-chat",
           },
           value: "gemini-pro",
           order: 1,
@@ -45,6 +52,13 @@ class PaperlibAIChatExtension extends PLExtension {
           type: "string",
           name: "OpenAI API Key",
           description: "The API key for OpenAI.",
+          value: "",
+          order: 2,
+        },
+        "perplexity-api-key": {
+          type: "string",
+          name: "Perplexity API Key",
+          description: "The API key for Perplexity.",
           value: "",
           order: 2,
         },
@@ -97,7 +111,25 @@ class PaperlibAIChatExtension extends PLExtension {
     }
   }
 
+  async encode(text: string): Promise<number[]> {
+    this.worker?.postMessage({ text, task: "feature-extraction" });
+    return new Promise((resolver) => {
+      const handleMessage = (message: { type: string; data: number[] }) => {
+        if (message.type == "feature-extraction") {
+          resolver(message.data);
+          this.worker?.removeListener("message", handleMessage);
+        }
+      };
+
+      this.worker?.on("message", handleMessage);
+    });
+  }
+
   async initialize() {
+    const workerPath = path.join("assets", "worker.js");
+    const url = new URL(workerPath, import.meta.url);
+    this.worker = new Worker(url);
+
     await PLExtAPI.extensionPreferenceService.register(
       this.id,
       this.defaultPreference,
@@ -150,27 +182,29 @@ class PaperlibAIChatExtension extends PLExtension {
       return;
     }
 
-    await PLMainAPI.windowProcessManagementService.create(windowID, {
-      entry: path.resolve(__dirname, "./view/index.html"),
-      title: "Discuss with LLM",
-      width: 300,
-      useContentSize: true,
-      center: true,
-      resizable: true,
-      skipTaskbar: true,
-      webPreferences: {
-        webSecurity: false,
-        nodeIntegration: true,
-        contextIsolation: false,
+    await PLMainAPI.windowProcessManagementService.create(
+      windowID,
+      {
+        entry: path.resolve(__dirname, "./view/index.html"),
+        title: "Discuss with LLM",
+        width: 300,
+        useContentSize: true,
+        center: true,
+        resizable: true,
+        skipTaskbar: true,
+        webPreferences: {
+          webSecurity: false,
+          nodeIntegration: true,
+          contextIsolation: false,
+        },
+        frame: false,
+        show: true,
       },
-      frame: false,
-      show: true,
-    },
       undefined,
       {
-        'Cross-Origin-Opener-Policy': 'same-origin',
-        'Cross-Origin-Embedder-Policy': 'require-corp'
-      }
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Embedder-Policy": "require-corp",
+      },
     );
 
     await PLMainAPI.windowProcessManagementService.setParentWindow(
@@ -222,6 +256,7 @@ class PaperlibAIChatExtension extends PLExtension {
     PLMainAPI.contextMenuService.unregisterContextMenu(extID);
     PLExtAPI.extensionPreferenceService.unregister(extID);
     await PLMainAPI.windowProcessManagementService.destroy(windowID);
+    this.worker?.terminate();
   }
 
   private async _startChat() {

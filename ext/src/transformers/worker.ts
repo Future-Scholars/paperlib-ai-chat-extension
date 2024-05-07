@@ -1,16 +1,12 @@
 // https://github.com/xenova/transformers.js/blob/main/examples/demo-site/src/worker.js
 import {
-  pipeline,
-  FeatureExtractionPipeline,
-  PipelineType,
   env,
+  FeatureExtractionPipeline,
+  pipeline,
+  PipelineType,
 } from "@xenova/transformers";
+import { parentPort } from "worker_threads";
 
-env.allowLocalModels = false;
-env.backends.onnx.wasm.wasmPaths = self.location.href.replace(
-  "assets/worker.js",
-  "/transformersWasm/",
-);
 env.backends.onnx.wasm.numThreads = 4;
 
 // Define task function mapping
@@ -46,7 +42,7 @@ class FeatureExtractionFactory extends PipelineFactory {
 
 async function featureExtraction(data: { text: string }) {
   let pipeline = (await FeatureExtractionFactory.getInstance((data) => {
-    self.postMessage({
+    parentPort?.postMessage({
       type: "download",
       task: "feature-extraction",
       data: data,
@@ -61,21 +57,21 @@ async function featureExtraction(data: { text: string }) {
     pooling: "mean",
     normalize: true,
   });
-  self.postMessage({
+  parentPort?.postMessage({
     type: "feature-extraction",
     data: output.tolist()[0] as number[],
   });
 }
 
 // Listen for messages from UI
-self.addEventListener("message", async (event) => {
-  const data = event.data;
+parentPort?.on("message", async (data) => {
+  console.log("$data", data);
   let fn = TASK_FUNCTION_MAPPING[data.task];
 
   if (!fn) return;
 
   let result = await fn(data);
-  self.postMessage({
+  parentPort?.postMessage({
     task: data.task,
     type: "result",
     data: result,

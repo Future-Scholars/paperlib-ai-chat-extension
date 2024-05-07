@@ -192,11 +192,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col bg-neutral-50">
+  <div class="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-800">
     <div id="title-bar" class="flex flex-none space-x-2 w-full pt-3 pl-3 pr-3">
       <div
         id="paper-info-bar"
-        class="text-neutral-800 grow truncate bg-neutral-300 rounded-md h-8 items-center flex cursor-pointer select-none"
+        class="text-neutral-800 grow truncate bg-neutral-300 rounded-md h-8 items-center flex cursor-pointer select-none dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white"
         :class="pinned ? '' : 'draggable'"
         :title="`${curPaperEntity.authors} - ${curPaperEntity.publication} - ${curPaperEntity.pubTime}`"
       >
@@ -207,27 +207,29 @@ onMounted(() => {
       <div class="flex space-x-1 font-semibold text-neutral-700 flex-none">
         <div
           v-if="pinned"
-          class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200"
+          class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white hover:dark:bg-neutral-500"
           @click="unpin"
         >
           <BIconBoxArrowUpRight class="text-xs m-auto" />
         </div>
         <div
           v-else
-          class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200"
+          class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white hover:dark:bg-neutral-500"
           @click="pin"
         >
           <BIconBoxArrowInDownLeft class="text-sm m-auto" />
         </div>
         <div
-          class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200"
+          class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white hover:dark:bg-neutral-500"
           @click="closeWindow"
         >
           <BIconX class="text-lg m-auto" />
         </div>
       </div>
     </div>
-    <hr class="my-3 mx-3 flex-none" />
+    <hr
+      class="my-3 mx-3 flex-none dark:bg-neutral-600 h-px bg-gray-200 border-0"
+    />
     <div
       id="msg-list"
       class="grow px-3 text-sm space-y-2 overflow-scroll"
@@ -239,14 +241,14 @@ onMounted(() => {
           class="flex-none flex justify-start w-full"
         >
           <div
-            class="flex-none bg-neutral-200 p-2 rounded-t-lg rounded-br-lg max-w-[75%]"
+            class="flex-none bg-neutral-200 p-2 rounded-t-lg rounded-br-lg max-w-[75%] dark:bg-neutral-700 dark:text-white"
           >
             <span>{{ msg.content }}</span>
           </div>
         </div>
         <div v-else class="flex-none flex justify-end w-full">
           <div
-            class="flex-none bg-neutral-500 p-2 rounded-t-lg rounded-bl-lg max-w-[75%] text-neutral-50"
+            class="flex-none bg-neutral-500 p-2 rounded-t-lg rounded-bl-lg max-w-[75%] text-neutral-50 dark:text-white dark:bg-neutral-600"
           >
             <span>{{ msg.content }}</span>
           </div>
@@ -255,18 +257,20 @@ onMounted(() => {
     </div>
     <div
       id="input-box "
-      class="flex-none flex space-x-2 text-neutral-800 mx-3 my-3 bg-neutral-200 rounded-md flex-row items-center"
+      class="flex-none flex space-x-2 text-neutral-800 mx-3 my-3"
     >
       <input
         type="text"
         id="msg-input"
-        class="w-full p-2 grow outline-none text-sm bg-transparent"
+        class="w-full p-2 bg-neutral-200 rounded-md grow outline-none text-sm dark:bg-neutral-700 dark:text-neutral-300"
+        :placeholder="
+          ready ? `Type your question here...` : `Please wait, loading paper...`
+        "
         ref="msgInputRef"
-        placeholder="Type your question here..."
+        :disabled="!ready"
         @focus="handleMsgInputFocus"
         @blur="handleMsgInputBlur"
       />
-      <BIconPauseCircle class="pr-1 text-2xl" v-if="loading || !ready" />
     </div>
   </div>
 </template>
