@@ -257,20 +257,18 @@ onMounted(() => {
     </div>
     <div
       id="input-box "
-      class="flex-none flex space-x-2 text-neutral-800 mx-3 my-3"
+      class="flex-none flex space-x-2 text-neutral-800 mx-3 my-3 bg-neutral-200 rounded-md flex-row items-center dark:bg-neutral-700 dark:text-neutral-300"
     >
       <input
         type="text"
         id="msg-input"
-        class="w-full p-2 bg-neutral-200 rounded-md grow outline-none text-sm dark:bg-neutral-700 dark:text-neutral-300"
-        :placeholder="
-          ready ? `Type your question here...` : `Please wait, loading paper...`
-        "
+        class="w-full p-2 grow outline-none text-sm bg-transparent"
         ref="msgInputRef"
-        :disabled="!ready"
+        placeholder="Type your question here..."
         @focus="handleMsgInputFocus"
         @blur="handleMsgInputBlur"
       />
+      <BIconPauseCircle class="pr-1 text-2xl" v-if="loading || !ready" />
     </div>
   </div>
 </template>
