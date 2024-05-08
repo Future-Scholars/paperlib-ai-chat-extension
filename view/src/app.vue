@@ -16,7 +16,7 @@ const INIT_MESSAGE_LIST = [
   {
     id: crypto.randomUUID(),
     content:
-      "Hello, you can ask me anything about this paper. I will try my best to anwser you. Please make sure you have set the API key in the settings.",
+      "Hello, you can ask me anything about this paper. I will try my best to anwser you. Please make sure you have set the API key in the preference.",
     sender: "system",
     time: "2021-10-10 10:10:10",
   },
@@ -73,7 +73,7 @@ const loadPaperText = async () => {
   messageList.value.push({
     id: crypto.randomUUID(),
     content:
-      "I'm loading this pape... It may take a few seconds to several minutes to embed the paper's content...",
+      "I'm loading this paper... It may take a few seconds to several minutes to embed the paper's content...",
     sender: "system",
     time: new Date().toLocaleString(),
   });
@@ -231,7 +231,7 @@ onMounted(() => {
     />
     <div
       id="msg-list"
-      class="grow px-3 text-sm space-y-2 overflow-scroll"
+      class="grow px-3 text-sm space-y-2 overflow-y-scroll"
       ref="msgListRef"
     >
       <div v-for="msg in messageList" :key="msg.id" class="flex space-x-2">
@@ -293,5 +293,50 @@ onMounted(() => {
 .draggable {
   user-select: none;
   -webkit-app-region: drag;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: var(--q-bg-secondary);
+  border-radius: 2px;
+}
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 2px;
+}
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.sidebar-windows-bg {
+  background-color: #efefef;
+}
+
+.splitpanes__splitter {
+  background-color: #efefef;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sidebar-windows-bg {
+    background-color: rgb(50, 50, 50);
+  }
+  .splitpanes__splitter {
+    background-color: rgb(50, 50, 50);
+  }
+  .plugin-windows-bg {
+    background-color: rgb(50, 50, 50);
+  }
 }
 </style>
