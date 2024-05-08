@@ -1,5 +1,5 @@
 import { getFullText } from "@/utils/pdfjs/utils";
-import { PLAPI, PLMainAPI } from "paperlib-api/api";
+import { PLAPI, PLExtAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
 import { EncoderService } from "./encoder-service";
 import { LLMService } from "./llm-service";
@@ -40,22 +40,43 @@ export class ChatService {
       );
       return;
     }
-
-    const pagetexts = await getFullText(url);
+    const fulltext = await this.getFullText(url);
 
     this._embeddings = [];
-    for (const pagetext of pagetexts) {
-      const words = pagetext.split(" ");
-      const paragraphs: string[] = [];
-      for (let i = 0; i < words.length; i += 256) {
-        paragraphs.push(words.slice(i, i + 256).join(" "));
-      }
-
-      for (const paragraph of paragraphs) {
-        const embedding = await this._encoderService.encode(paragraph);
-        this._embeddings.push({ text: paragraph, embedding });
-      }
+    const words = fulltext.split(" ");
+    const paragraphs: string[] = [];
+    for (let i = 0; i < words.length; i += 256) {
+      paragraphs.push(words.slice(i, i + 256).join(" "));
     }
+
+    for (const paragraph of paragraphs) {
+      const embedding = await this._encoderService.encode(paragraph);
+      this._embeddings.push({ text: paragraph, embedding });
+    }
+  }
+
+  async getFullText(url: string) {
+    const useLLAMAParse = (await PLExtAPI.extensionPreferenceService.get(
+      "@future-scholars/paperlib-ai-chat-extension",
+      "llama-parse",
+    )) as boolean;
+    const llamaParseAPIKey = (await PLExtAPI.extensionPreferenceService.get(
+      "@future-scholars/paperlib-ai-chat-extension",
+      "llama-parse-api-key",
+    )) as string;
+
+    let text = "";
+    if (useLLAMAParse && llamaParseAPIKey) {
+      text = await PLExtAPI.extensionManagementService.callExtensionMethod(
+        "@future-scholars/paperlib-ai-chat-extension",
+        "llamaParse",
+        url
+      )
+    } else {
+      text = (await getFullText(url)).join("\n");
+    }
+
+    return text
   }
 
   async retrieveContext(text: string) {
@@ -63,7 +84,19 @@ export class ChatService {
       throw new Error("Paper entity not loaded");
     }
 
-    return await this._encoderService.retrieve(text, this._embeddings);
+    const model = (await PLExtAPI.extensionPreferenceService.get(
+      "@future-scholars/paperlib-ai-chat-extension",
+      "ai-model",
+    )) as string;
+
+    let contextParagNum = 0;
+    if (model === "gpt-3.5-turbo") {
+      contextParagNum = 1;
+    } else {
+      contextParagNum = 2;
+    }
+
+    return await this._encoderService.retrieve(text, this._embeddings, contextParagNum);
   }
 
   async queryLLM(msg: string, context: string) {
