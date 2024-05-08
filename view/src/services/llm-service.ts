@@ -1,7 +1,5 @@
 import GPT3Tokenizer from "@/utils/openai/gpt3-tokenizer/index";
 import { PLAPI, PLExtAPI } from "paperlib-api/api";
-import { PaperEntity } from "paperlib-api/model";
-import { urlUtils } from "paperlib-api/utils";
 
 export interface IGeminiResponse {
   candidates: [
@@ -25,6 +23,11 @@ export interface IOpenAIResponse {
       };
     },
   ];
+}
+
+export const GEMINIModels = {
+  "gemini-pro": -1,
+  "gemini-1.5-pro-latest": -1,
 }
 
 export const OPENAIModels = {
@@ -59,7 +62,7 @@ export class LLMService {
       "@future-scholars/paperlib-ai-chat-extension",
       "customAPIURL",
     )) as string;
-    if (model === "gemini-pro") {
+    if (GEMINIModels.hasOwnProperty("gemini-pro")) {
       apiKey = (await PLExtAPI.extensionPreferenceService.get(
         "@future-scholars/paperlib-ai-chat-extension",
         "gemini-api-key",
@@ -79,8 +82,8 @@ export class LLMService {
     const prompt = `I'm reading a paper. I have a question about it: ${text}. Please help me answer it with the following context: ${context}.`;
 
     let anwser = "";
-    if (model === "gemini-pro") {
-      anwser = await this.requestGeminiPro(text, prompt, apiKey, customAPIURL);
+    if (GEMINIModels.hasOwnProperty(model)) {
+      anwser = await this.requestGeminiPro(text, prompt, apiKey, model, customAPIURL);
     } else if (OPENAIModels.hasOwnProperty(model)) {
       anwser = await this.requestGPT(
         text,
@@ -112,13 +115,14 @@ export class LLMService {
     text: string,
     prompt: string,
     apiKey: string,
+    model: string,
     customAPIURL: string,
   ) {
     try {
       const apiEndpoint =
         customAPIURL || "https://generativelanguage.googleapis.com/";
       const url = new URL(
-        `v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+        `v1beta/models/${model}:generateContent?key=${apiKey}`,
         apiEndpoint,
       ).href;
 

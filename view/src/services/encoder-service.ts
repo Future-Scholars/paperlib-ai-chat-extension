@@ -15,7 +15,7 @@ worker.onerror = (event: ErrorEvent) => {
 export class EncoderService {
   extractor?: FeatureExtractionPipeline;
 
-  constructor() {}
+  constructor() { }
 
   encode(text: string): Promise<number[]> {
     worker.postMessage({ text, task: "feature-extraction" });
@@ -37,6 +37,7 @@ export class EncoderService {
   async retrieve(
     text: string,
     embeddings: { text: string; embedding: number[] }[],
+    contextParagNum: number = 0,
   ) {
     // find the most similar text based on the cosine similarity of the embeddings
     const textEmbedding = await this.encode(text);
@@ -53,12 +54,16 @@ export class EncoderService {
     }
     const { text: mostSimilarText } = embeddings[maxIndex];
     let mostSimilarTexts = [mostSimilarText];
-    if (maxIndex - 1 >= 0) {
-      mostSimilarTexts.unshift(embeddings[maxIndex - 1].text);
+
+    for (let i = 0; i <= contextParagNum; i++) {
+      if (maxIndex + 1 + i < embeddings.length) {
+        mostSimilarTexts.push(embeddings[maxIndex + 1 + i].text);
+      }
+      if (maxIndex - 1 - i >= 0) {
+        mostSimilarTexts.unshift(embeddings[maxIndex - 1 - i].text);
+      }
     }
-    if (maxIndex + 1 < embeddings.length) {
-      mostSimilarTexts.push(embeddings[maxIndex + 1].text);
-    }
+
     return mostSimilarTexts.join(" ");
   }
 }
