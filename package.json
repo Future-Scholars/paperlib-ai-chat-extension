@@ -5,7 +5,8 @@
   "description": "This extension allows you to discuss a paper with a LLM.",
   "main": "dist/main.js",
   "type": "commonjs",
-  "manifest_version": "1.0.0",
+  "manifest_version": "0.1.8",
+  "homepage": "https://github.com/Future-Scholars/paperlib-ai-chat-extension",
   "scripts": {
     "build": "npm run build-ext && npm run build-view",
     "build-ext": "tsc --noEmit --p ./ext/tsconfig.json && vite build --config ./ext/vite.config.ts",
