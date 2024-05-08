@@ -130,7 +130,7 @@ const sendMessage = async (event: KeyboardEvent) => {
       time: new Date().toLocaleString(),
     });
 
-    scrollMsgListToBottom();
+    setTimeout(scrollMsgListToBottom, 200);
 
     const context = await chatService.retrieveContext(msg);
 
@@ -146,6 +146,8 @@ const sendMessage = async (event: KeyboardEvent) => {
         time: new Date().toLocaleString(),
       };
     }
+
+    setTimeout(scrollMsgListToBottom, 200);
   } finally {
     loading.value = false;
   }
