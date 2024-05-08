@@ -1,7 +1,9 @@
 import { PLAPI, PLExtAPI, PLExtension, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
-import { processId } from "paperlib-api/utils";
+import { processId, urlUtils } from "paperlib-api/utils";
 import path from "path";
+import { createReadStream } from 'fs';
+import { blob } from 'stream/consumers';
 
 const extID = "@future-scholars/paperlib-ai-chat-extension";
 
@@ -18,12 +20,27 @@ class PaperlibAIChatExtension extends PLExtension {
     super({
       id: extID,
       defaultPreference: {
+        "llama-parse": {
+          type: "boolean",
+          name: "Enable Llama Parse",
+          description: "Use Llama Parse to extract text from PDFs.",
+          value: false,
+          order: 0,
+        },
+        "llama-parse-api-key": {
+          type: "string",
+          name: "Llama Parse API Key",
+          description: "The API key for Llama Parse. Obtain from https://cloud.llamaindex.ai/parse",
+          value: "",
+          order: 0,
+        },
         "ai-model": {
           type: "options",
           name: "LLM Model",
           description: "The LLM model to use.",
           options: {
-            "gemini-pro": "Gemini Pro",
+            "gemini-pro": "Gemini Pro 1.0",
+            "gemini-1.5-pro-latest": "Gemini Pro 1.5",
             "gpt-3.5-turbo": "GPT-3.5 Turbo",
             "gpt-3.5-turbo-16k": "GPT-3.5 Turbo 16K",
             "gpt-3.5-turbo-1106": "GPT-3.5 Turbo 1106",
@@ -262,6 +279,68 @@ class PaperlibAIChatExtension extends PLExtension {
     );
 
     this._createChatWindow(selectedPaperEntity);
+  }
+
+  private async llamaParse(url: string) {
+    const llamaParseAPIKey = (await PLExtAPI.extensionPreferenceService.get(
+      "@future-scholars/paperlib-ai-chat-extension",
+      "llama-parse-api-key",
+    )) as string;
+
+    const fileBlob = await blob(createReadStream(urlUtils.eraseProtocol(url)))
+    const results = await PLExtAPI.networkTool.postForm(
+      "https://api.cloud.llamaindex.ai/api/parsing/upload",
+      {
+        file: fileBlob
+      } as any,
+      {
+        "accept": "application/json",
+        "Authorization": `Bearer ${llamaParseAPIKey}`,
+      },
+      1,
+      240000,
+      true
+    )
+    const id = results.body.id
+
+    // Wait for the parsing to finish, check every 5 seconds
+    let status = "PENDING"
+    while (status === "PENDING") {
+      await new Promise((resolve) => setTimeout(resolve, 5000))
+      const statusRes = await PLExtAPI.networkTool.get(
+        `https://api.cloud.llamaindex.ai/api/parsing/job/${id}`,
+        {
+          "accept": "application/json",
+          "Authorization": `Bearer ${llamaParseAPIKey}`,
+        },
+        1,
+        5000,
+        false,
+        true
+      )
+      status = statusRes.body.status
+    }
+
+    if (status === "ERROR") {
+      throw new Error("Llama Parse failed")
+    } 
+
+    if (status === "SUCCESS") {
+      console.log("Parsing successful")
+      const textRes = await PLExtAPI.networkTool.get(
+        `https://api.cloud.llamaindex.ai/api/parsing/job/${id}/result/markdown`,
+        {
+          "accept": "application/json",
+          "Authorization": `Bearer ${llamaParseAPIKey}`,
+        },
+        1,
+        5000,
+        false,
+        true
+      )
+      console.log(textRes.body)
+      return textRes.body.markdown
+    }
   }
 }
 
