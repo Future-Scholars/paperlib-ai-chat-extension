@@ -62,7 +62,7 @@ export class LLMService {
       "@future-scholars/paperlib-ai-chat-extension",
       "customAPIURL",
     )) as string;
-    if (GEMINIModels.hasOwnProperty("gemini-pro")) {
+    if (GEMINIModels.hasOwnProperty(model)) {
       apiKey = (await PLExtAPI.extensionPreferenceService.get(
         "@future-scholars/paperlib-ai-chat-extension",
         "gemini-api-key",
