@@ -1,6 +1,6 @@
 {
   "name": "@future-scholars/paperlib-ai-chat-extension",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "author": "Paperlib",
   "description": "This extension allows you to discuss a paper with a LLM.",
   "main": "dist/main.js",

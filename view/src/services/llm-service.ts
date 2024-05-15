@@ -26,8 +26,9 @@ export interface IOpenAIResponse {
 }
 
 export const GEMINIModels = {
-  "gemini-pro": -1,
-  "gemini-1.5-pro-latest": -1,
+  "gemini-1.0-pro": 30720,
+  "gemini-1.5-pro-latest": 1048576,
+  "gemini-1.5-flash-latest": 1048576,
 }
 
 export const OPENAIModels = {
@@ -35,6 +36,8 @@ export const OPENAIModels = {
   "gpt-3.5-turbo-16k": 16385,
   "gpt-3.5-turbo-1106": 16385,
   "gpt-4": 8192,
+  "gpt-4-turbo": 4096,
+  "gpt-4o": 2048,
   "gpt-4-32k": 32768,
   "gpt-4-1106-preview": 128000,
 };
