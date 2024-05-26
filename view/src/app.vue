@@ -4,7 +4,12 @@ import { PaperEntity } from "paperlib-api/model";
 import { disposable } from "@/base/dispose.ts";
 import { processId } from "paperlib-api/utils";
 import { BIconX } from "bootstrap-icons-vue";
-import { MessageInput, MessageList, WindowPin } from "./components";
+import {
+  MessageInput,
+  MessageList,
+  WindowPin,
+  PaperSelector,
+} from "./components";
 import { PLAPI, PLMainAPI } from "paperlib-api/api";
 
 const INIT_MESSAGE_LIST = [
@@ -30,7 +35,7 @@ const curPaperEntity = ref<
 const messageItems = ref([...INIT_MESSAGE_LIST]);
 const msgInputRef = ref<{ inputRef: HTMLInputElement | null } | null>(null);
 const msgListRef = ref<{ listRef: HTMLDivElement | null } | null>(null);
-const windowPinRef = ref<{ pinned: boolean } | null>(null);
+const windowPinRef = ref<{ pinned: boolean }>({ pinned: false });
 const ready = ref(false);
 const loading = ref(false);
 
@@ -158,16 +163,10 @@ onMounted(() => {
 <template>
   <div class="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-800">
     <div id="title-bar" class="flex flex-none space-x-2 w-full pt-3 pl-3 pr-3">
-      <div
-        id="paper-info-bar"
-        class="text-neutral-800 grow truncate bg-neutral-300 rounded-md h-8 items-center flex cursor-pointer select-none dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white"
-        :class="windowPinRef?.pinned ? '' : 'draggable'"
-        :title="`${curPaperEntity.authors} - ${curPaperEntity.publication} - ${curPaperEntity.pubTime}`"
-      >
-        <span class="font-medium truncate text-sm px-2">{{
-          curPaperEntity.title
-        }}</span>
-      </div>
+      <paper-selector
+        :cur-paper-entity="curPaperEntity"
+        :pinned="windowPinRef.pinned"
+      ></paper-selector>
       <div class="flex space-x-1 font-semibold text-neutral-700 flex-none">
         <window-pin></window-pin>
         <div
