@@ -9,7 +9,7 @@ import {
   BIconBoxArrowUpRight,
   BIconBoxArrowInDownLeft,
 } from "bootstrap-icons-vue";
-import { MessageInput } from "./components";
+import { MessageInput, MessageList } from "./components";
 
 const windowID = "paperlib-ai-chat-extension-window";
 
@@ -33,19 +33,19 @@ const curPaperEntity = ref<
   pubTime: "",
 });
 
-const messageList = ref([...INIT_MESSAGE_LIST]);
+const messageItems = ref([...INIT_MESSAGE_LIST]);
 
 const msgInputRef = ref<{ inputRef: HTMLInputElement | null } | null>(null);
 
-const msgListRef = ref<HTMLDivElement | null>(null);
+const msgListRef = ref<{ listRef: HTMLDivElement | null } | null>(null);
 
 const pinned = ref(true);
 const ready = ref(false);
 const loading = ref(false);
 
 const scrollMsgListToBottom = () => {
-  if (msgListRef.value) {
-    msgListRef.value.scrollTop = msgListRef.value.scrollHeight;
+  if (msgListRef.value?.listRef) {
+    msgListRef.value.listRef.scrollTop = msgListRef.value.listRef.scrollHeight;
   }
 };
 
@@ -71,8 +71,8 @@ const handleMsgInputBlur = () => {
 
 const loadPaperText = async () => {
   ready.value = false;
-  messageList.value = [...INIT_MESSAGE_LIST];
-  messageList.value.push({
+  messageItems.value = [...INIT_MESSAGE_LIST];
+  messageItems.value.push({
     id: crypto.randomUUID(),
     content:
       "I'm loading this paper... It may take a few seconds to several minutes to embed the paper's content...",
@@ -93,7 +93,7 @@ const loadPaperText = async () => {
     await chatService.initializeEncoder();
 
     ready.value = true;
-    messageList.value.push({
+    messageItems.value.push({
       id: crypto.randomUUID(),
       content:
         "The paper has been loaded successfully! You can start asking questions now.",
@@ -118,14 +118,14 @@ const sendMessage = async (event: KeyboardEvent) => {
     const msg = (event.target as HTMLInputElement).value;
     if (msg === "") return;
     (event.target as HTMLInputElement).value = "";
-    messageList.value.push({
+    messageItems.value.push({
       id: crypto.randomUUID(),
       content: msg,
       sender: "user",
       time: new Date().toLocaleString(),
     });
     const receivedMsgId = crypto.randomUUID();
-    messageList.value.push({
+    messageItems.value.push({
       id: receivedMsgId,
       content: "I am thinking...",
       sender: "system",
@@ -137,11 +137,11 @@ const sendMessage = async (event: KeyboardEvent) => {
     const context = await chatService.retrieveContext(msg);
 
     const answer = await chatService.queryLLM(msg, context);
-    const targetIndex = messageList.value.findIndex(
+    const targetIndex = messageItems.value.findIndex(
       (item) => item.id === receivedMsgId,
     );
     if (targetIndex !== -1) {
-      messageList.value[targetIndex] = {
+      messageItems.value[targetIndex] = {
         id: crypto.randomUUID(),
         content: answer || "Something wrong!",
         sender: "system",
@@ -233,31 +233,7 @@ onMounted(() => {
     <hr
       class="my-3 mx-3 flex-none dark:bg-neutral-600 h-px bg-gray-200 border-0"
     />
-    <div
-      id="msg-list"
-      class="grow px-3 text-sm space-y-2 overflow-y-scroll"
-      ref="msgListRef"
-    >
-      <div v-for="msg in messageList" :key="msg.id" class="flex space-x-2">
-        <div
-          v-if="msg.sender === 'system'"
-          class="flex-none flex justify-start w-full"
-        >
-          <div
-            class="flex-none bg-neutral-200 p-2 rounded-t-lg rounded-br-lg max-w-[75%] dark:bg-neutral-700 dark:text-white"
-          >
-            <span>{{ msg.content }}</span>
-          </div>
-        </div>
-        <div v-else class="flex-none flex justify-end w-full">
-          <div
-            class="flex-none bg-neutral-500 p-2 rounded-t-lg rounded-bl-lg max-w-[75%] text-neutral-50 dark:text-white dark:bg-neutral-600"
-          >
-            <span>{{ msg.content }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <message-list :items="messageItems" ref="msgListRef"></message-list>
     <message-input
       :disabled="loading || !ready"
       @focus="handleMsgInputFocus"
