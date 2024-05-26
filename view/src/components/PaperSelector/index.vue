@@ -22,4 +22,9 @@ defineProps<{
 }>();
 </script>
 
-<style scoped></style>
+<style scoped>
+.draggable {
+  user-select: none;
+  -webkit-app-region: drag;
+}
+</style>

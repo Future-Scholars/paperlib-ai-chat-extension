@@ -191,11 +191,6 @@ onMounted(() => {
 </template>
 
 <style>
-.draggable {
-  user-select: none;
-  -webkit-app-region: drag;
-}
-
 /* Track */
 ::-webkit-scrollbar-track {
   background: var(--q-bg-secondary);
