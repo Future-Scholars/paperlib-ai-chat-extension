@@ -1,17 +1,11 @@
 <script setup lang="ts">
-import { nextTick, onMounted, Ref, ref } from "vue";
-import { PLAPI, PLMainAPI } from "paperlib-api/api";
+import { onMounted, ref } from "vue";
 import { PaperEntity } from "paperlib-api/model";
 import { disposable } from "@/base/dispose.ts";
 import { processId } from "paperlib-api/utils";
-import {
-  BIconX,
-  BIconBoxArrowUpRight,
-  BIconBoxArrowInDownLeft,
-} from "bootstrap-icons-vue";
-import { MessageInput, MessageList } from "./components";
-
-const windowID = "paperlib-ai-chat-extension-window";
+import { BIconX } from "bootstrap-icons-vue";
+import { MessageInput, MessageList, WindowPin } from "./components";
+import { PLAPI, PLMainAPI } from "paperlib-api/api";
 
 const INIT_MESSAGE_LIST = [
   {
@@ -34,12 +28,9 @@ const curPaperEntity = ref<
 });
 
 const messageItems = ref([...INIT_MESSAGE_LIST]);
-
 const msgInputRef = ref<{ inputRef: HTMLInputElement | null } | null>(null);
-
 const msgListRef = ref<{ listRef: HTMLDivElement | null } | null>(null);
-
-const pinned = ref(true);
+const windowPinRef = ref<{ pinned: boolean } | null>(null);
 const ready = ref(false);
 const loading = ref(false);
 
@@ -107,7 +98,7 @@ const closeWindow = () => {
   PLMainAPI.windowProcessManagementService.forceClose(
     "paperlib-ai-chat-extension-window",
   );
-  if (pinned.value) {
+  if (windowPinRef.value?.pinned) {
     PLMainAPI.windowProcessManagementService.focus(processId.renderer);
   }
 };
@@ -155,36 +146,6 @@ const sendMessage = async (event: KeyboardEvent) => {
   }
 };
 
-const unpin = async () => {
-  pinned.value = false;
-  await nextTick(async () => {
-    await PLMainAPI.windowProcessManagementService.setParentWindow(
-      null,
-      windowID,
-    );
-    await PLMainAPI.windowProcessManagementService.center(windowID);
-    await PLMainAPI.windowProcessManagementService.setAlwaysOnTop(
-      windowID,
-      true,
-    );
-  });
-};
-
-const pin = async () => {
-  pinned.value = true;
-  await PLMainAPI.windowProcessManagementService.setParentWindow(
-    processId.renderer,
-    windowID,
-  );
-  await PLMainAPI.windowProcessManagementService.fire({
-    [windowID]: "pin-window",
-  });
-  await PLMainAPI.windowProcessManagementService.setAlwaysOnTop(
-    windowID,
-    false,
-  );
-};
-
 disposable(
   PLAPI.uiStateService.onChanged(["selectedPaperEntities"], loadPaperText),
 );
@@ -200,7 +161,7 @@ onMounted(() => {
       <div
         id="paper-info-bar"
         class="text-neutral-800 grow truncate bg-neutral-300 rounded-md h-8 items-center flex cursor-pointer select-none dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white"
-        :class="pinned ? '' : 'draggable'"
+        :class="windowPinRef?.pinned ? '' : 'draggable'"
         :title="`${curPaperEntity.authors} - ${curPaperEntity.publication} - ${curPaperEntity.pubTime}`"
       >
         <span class="font-medium truncate text-sm px-2">{{
@@ -208,20 +169,7 @@ onMounted(() => {
         }}</span>
       </div>
       <div class="flex space-x-1 font-semibold text-neutral-700 flex-none">
-        <div
-          v-if="pinned"
-          class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white hover:dark:bg-neutral-500"
-          @click="unpin"
-        >
-          <BIconBoxArrowUpRight class="text-xs m-auto" />
-        </div>
-        <div
-          v-else
-          class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white hover:dark:bg-neutral-500"
-          @click="pin"
-        >
-          <BIconBoxArrowInDownLeft class="text-sm m-auto" />
-        </div>
+        <window-pin></window-pin>
         <div
           class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white hover:dark:bg-neutral-500"
           @click="closeWindow"
