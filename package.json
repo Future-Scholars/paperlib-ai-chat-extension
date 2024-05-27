@@ -29,6 +29,7 @@
     "gpt3-tokenizer": "^1.1.5",
     "paperlib-api": "^0.1.8",
     "pdfjs-dist": "^4.0.269",
+    "pinia": "^2.1.7",
     "prettier": "^3.1.1",
     "prettier-plugin-organize-imports": "^3.2.4",
     "rollup-plugin-copy": "^3.5.0",
