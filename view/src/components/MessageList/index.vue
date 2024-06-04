@@ -23,8 +23,8 @@
 </template>
 
 <script setup lang="ts">
-import { MessageItem } from "@/base/types.ts";
 import { ref } from "vue";
+import { MessageItem } from "@/store/message.ts";
 
 defineProps<{ items: MessageItem[] }>();
 const listRef = ref<HTMLDivElement | null>(null);

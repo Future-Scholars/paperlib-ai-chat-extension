@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { PaperEntity } from "paperlib-api/model";
 import { disposable } from "@/base/dispose.ts";
 import { processId } from "paperlib-api/utils";
@@ -11,16 +11,12 @@ import {
   PaperSelector,
 } from "./components";
 import { PLAPI, PLMainAPI } from "paperlib-api/api";
+import { useMessageStore } from "@/store/message.ts";
+import { useConversationStore } from "@/store/conversation.ts";
+import { storeToRefs } from "pinia";
 
-const INIT_MESSAGE_LIST = [
-  {
-    id: crypto.randomUUID(),
-    content:
-      "Hello, you can ask me anything about this paper. I will try my best to anwser you. Please make sure you have set the API key in the preference.",
-    sender: "system",
-    time: "2021-10-10 10:10:10",
-  },
-];
+const messageStore = useMessageStore();
+const conversationStore = useConversationStore();
 
 // Show some information about the paper
 const curPaperEntity = ref<
@@ -32,7 +28,12 @@ const curPaperEntity = ref<
   pubTime: "",
 });
 
-const messageItems = ref([...INIT_MESSAGE_LIST]);
+const { currentId: curConversationId } = storeToRefs(conversationStore);
+
+const { getConvMessages } = storeToRefs(messageStore);
+const messageItems = computed(() =>
+  getConvMessages.value(curConversationId.value),
+);
 const msgInputRef = ref<{ inputRef: HTMLInputElement | null } | null>(null);
 const msgListRef = ref<{ listRef: HTMLDivElement | null } | null>(null);
 const windowPinRef = ref<{ pinned: boolean }>({ pinned: false });
@@ -67,34 +68,33 @@ const handleMsgInputBlur = () => {
 
 const loadPaperText = async () => {
   ready.value = false;
-  messageItems.value = [...INIT_MESSAGE_LIST];
-  messageItems.value.push({
-    id: crypto.randomUUID(),
-    content:
-      "I'm loading this paper... It may take a few seconds to several minutes to embed the paper's content...",
-    sender: "system",
-    time: new Date().toLocaleString(),
-  });
-
   const selectedPaperEntities = (await PLAPI.uiStateService.getState(
     "selectedPaperEntities",
   )) as PaperEntity[];
 
   const paperEntity =
     selectedPaperEntities.length > 0 ? selectedPaperEntities[0] : undefined;
+  if (!paperEntity) {
+    return;
+  }
+  const conversationId = paperEntity._id as string;
+  conversationStore.selectConversation(conversationId);
+  const loadingMessage = messageStore.sendMessage({
+    conversationId,
+    content:
+      "I'm loading this paper... It may take a few seconds to several minutes to embed the paper's content...",
+    sender: "system",
+  });
 
   if (paperEntity) {
     curPaperEntity.value = paperEntity;
     await chatService.loadPaperEntity(paperEntity);
     await chatService.initializeEncoder();
-
     ready.value = true;
-    messageItems.value.push({
-      id: crypto.randomUUID(),
+    messageStore.updateMessage({
+      ...loadingMessage,
       content:
         "The paper has been loaded successfully! You can start asking questions now.",
-      sender: "system",
-      time: new Date().toLocaleString(),
     });
   }
 };
@@ -114,37 +114,11 @@ const sendMessage = async (event: KeyboardEvent) => {
     const msg = (event.target as HTMLInputElement).value;
     if (msg === "") return;
     (event.target as HTMLInputElement).value = "";
-    messageItems.value.push({
-      id: crypto.randomUUID(),
+    await messageStore.sendLLMMessage({
+      conversationId: curConversationId.value,
       content: msg,
       sender: "user",
-      time: new Date().toLocaleString(),
     });
-    const receivedMsgId = crypto.randomUUID();
-    messageItems.value.push({
-      id: receivedMsgId,
-      content: "I am thinking...",
-      sender: "system",
-      time: new Date().toLocaleString(),
-    });
-
-    setTimeout(scrollMsgListToBottom, 200);
-
-    const context = await chatService.retrieveContext(msg);
-
-    const answer = await chatService.queryLLM(msg, context);
-    const targetIndex = messageItems.value.findIndex(
-      (item) => item.id === receivedMsgId,
-    );
-    if (targetIndex !== -1) {
-      messageItems.value[targetIndex] = {
-        id: crypto.randomUUID(),
-        content: answer || "Something wrong!",
-        sender: "system",
-        time: new Date().toLocaleString(),
-      };
-    }
-
     setTimeout(scrollMsgListToBottom, 200);
   } finally {
     loading.value = false;
