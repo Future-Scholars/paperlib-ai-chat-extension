@@ -12,11 +12,9 @@ import {
 } from "./components";
 import { PLAPI, PLMainAPI } from "paperlib-api/api";
 import { useMessageStore } from "@/store/message.ts";
-import { useConversationStore } from "@/store/conversation.ts";
 import { storeToRefs } from "pinia";
 
 const messageStore = useMessageStore();
-const conversationStore = useConversationStore();
 
 // Show some information about the paper
 const curPaperEntity = ref<
@@ -28,7 +26,7 @@ const curPaperEntity = ref<
   pubTime: "",
 });
 
-const { currentId: curConversationId } = storeToRefs(conversationStore);
+const curConversationId = ref("");
 
 const { getConvMessages } = storeToRefs(messageStore);
 const messageItems = computed(() =>
@@ -77,10 +75,9 @@ const loadPaperText = async () => {
   if (!paperEntity) {
     return;
   }
-  const conversationId = paperEntity._id as string;
-  conversationStore.selectConversation(conversationId);
+  curConversationId.value = paperEntity._id as string;
   const loadingMessage = messageStore.sendMessage({
-    conversationId,
+    conversationId: curConversationId.value,
     content:
       "I'm loading this paper... It may take a few seconds to several minutes to embed the paper's content...",
     sender: "system",
