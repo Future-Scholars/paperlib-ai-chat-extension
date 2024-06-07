@@ -1,16 +1,21 @@
 import { defineStore } from "pinia";
 
+export enum MessageSender {
+  User = "user",
+  System = "system",
+}
+
 const INIT_MESSAGE = {
   content:
     "Hello, you can ask me anything about this paper. I will try my best to anwser you. Please make sure you have set the API key in the preference.",
-  sender: "system",
+  sender: MessageSender.System,
 };
 
 export interface MessageItem {
   conversationId: string;
   id: ReturnType<typeof crypto.randomUUID>;
   content: string;
-  sender: string;
+  sender: MessageSender;
   timestamp: number;
 }
 
@@ -67,7 +72,7 @@ export const useMessageStore = defineStore("message", {
       const loadingMsg = this.sendMessage({
         conversationId: msg.conversationId,
         content: "I am thinking...",
-        sender: "system",
+        sender: MessageSender.System,
       });
       const context = await chatService.retrieveContext(msg.content);
       const answer = await chatService.queryLLM(msg.content, context);

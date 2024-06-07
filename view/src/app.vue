@@ -11,7 +11,7 @@ import {
   PaperSelector,
 } from "./components";
 import { PLAPI, PLMainAPI } from "paperlib-api/api";
-import { useMessageStore } from "@/store/message.ts";
+import { MessageSender, useMessageStore } from "@/store/message.ts";
 import { storeToRefs } from "pinia";
 
 const messageStore = useMessageStore();
@@ -80,7 +80,7 @@ const loadPaperText = async () => {
     conversationId: curConversationId.value,
     content:
       "I'm loading this paper... It may take a few seconds to several minutes to embed the paper's content...",
-    sender: "system",
+    sender: MessageSender.System,
   });
 
   if (paperEntity) {
@@ -114,7 +114,7 @@ const sendMessage = async (event: KeyboardEvent) => {
     await messageStore.sendLLMMessage({
       conversationId: curConversationId.value,
       content: msg,
-      sender: "user",
+      sender: MessageSender.User,
     });
     setTimeout(scrollMsgListToBottom, 200);
   } finally {
