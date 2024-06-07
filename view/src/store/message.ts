@@ -17,6 +17,7 @@ export interface MessageItem {
   content: string;
   sender: MessageSender;
   timestamp: number;
+  fake?: boolean;
 }
 
 export const useMessageStore = defineStore("message", {
@@ -41,8 +42,11 @@ export const useMessageStore = defineStore("message", {
     updateMessage(msg: MessageItem) {
       this.entity[msg.id] = msg;
     },
+    delMessage(msgId: string) {
+      delete this.entity[msgId];
+    },
     sendMessage(
-      msg: Pick<MessageItem, "content" | "sender" | "conversationId">,
+      msg: Pick<MessageItem, "content" | "sender" | "conversationId" | "fake">,
     ) {
       const convMessages = this.getConvMessages(msg.conversationId);
       if (convMessages.length === 0) {

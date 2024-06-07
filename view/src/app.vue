@@ -64,6 +64,15 @@ const handleMsgInputBlur = () => {
   }
 };
 
+function cleanFakedMessage(conversationId) {
+  const curMessageItems = messageStore.getConvMessages(conversationId);
+  curMessageItems.forEach((item) => {
+    if (item.fake) {
+      messageStore.delMessage(item.id);
+    }
+  });
+}
+
 const loadPaperText = async () => {
   ready.value = false;
   const selectedPaperEntities = (await PLAPI.uiStateService.getState(
@@ -76,7 +85,9 @@ const loadPaperText = async () => {
     return;
   }
   curConversationId.value = paperEntity._id as string;
+  cleanFakedMessage(curConversationId.value);
   const loadingMessage = messageStore.sendMessage({
+    fake: true,
     conversationId: curConversationId.value,
     content:
       "I'm loading this paper... It may take a few seconds to several minutes to embed the paper's content...",
