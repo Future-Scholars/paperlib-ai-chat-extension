@@ -32,9 +32,18 @@ export const useMessageStore = defineStore("message", {
         const rawMessages = Object.values(state.entity).filter(
           (item) => item.conversationId === conversationId,
         );
-        return rawMessages.sort((a, b) => {
+        rawMessages.sort((a, b) => {
           return a.timestamp - b.timestamp;
         });
+        return [
+          {
+            id: crypto.randomUUID(),
+            conversationId,
+            timestamp: 0,
+            ...INIT_MESSAGE,
+          },
+          ...rawMessages,
+        ];
       };
     },
   },
@@ -48,17 +57,6 @@ export const useMessageStore = defineStore("message", {
     sendMessage(
       msg: Pick<MessageItem, "content" | "sender" | "conversationId" | "fake">,
     ) {
-      const convMessages = this.getConvMessages(msg.conversationId);
-      if (convMessages.length === 0) {
-        const initMsgId = crypto.randomUUID();
-        this.entity[initMsgId] = {
-          id: initMsgId,
-          conversationId: msg.conversationId,
-          timestamp: new Date().valueOf(),
-          ...INIT_MESSAGE,
-        };
-      }
-
       const id = crypto.randomUUID();
       const newMessage = {
         id,
