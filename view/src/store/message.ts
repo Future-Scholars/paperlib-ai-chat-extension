@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { ref } from "vue";
 
 export enum MessageSender {
   User = "user",
@@ -20,68 +21,62 @@ export interface MessageItem {
   fake?: boolean;
 }
 
-export const useMessageStore = defineStore("message", {
-  state() {
-    return {
-      entity: {} as Record<string, MessageItem>,
-    };
-  },
-  getters: {
-    getConvMessages: (state) => {
-      return (conversationId: string) => {
-        const rawMessages = Object.values(state.entity).filter(
-          (item) => item.conversationId === conversationId,
-        );
-        rawMessages.sort((a, b) => {
-          return a.timestamp - b.timestamp;
-        });
-        return [
-          {
-            id: crypto.randomUUID(),
-            conversationId,
-            timestamp: 0,
-            ...INIT_MESSAGE,
-          },
-          ...rawMessages,
-        ];
-      };
-    },
-  },
-  actions: {
-    updateMessage(msg: MessageItem) {
-      this.entity[msg.id] = msg;
-    },
-    delMessage(msgId: string) {
-      delete this.entity[msgId];
-    },
-    sendMessage(
-      msg: Pick<MessageItem, "content" | "sender" | "conversationId" | "fake">,
-    ) {
-      const id = crypto.randomUUID();
-      const newMessage = {
-        id,
-        timestamp: new Date().valueOf(),
-        ...msg,
-      };
-      this.entity[id] = newMessage;
-      return newMessage;
-    },
-    async sendLLMMessage(
-      msg: Pick<MessageItem, "content" | "sender" | "conversationId">,
-    ) {
-      this.sendMessage(msg);
+export const useMessageStore = defineStore("message", () => {
+  const entity = ref<Record<string, MessageItem>>({});
 
-      const loadingMsg = this.sendMessage({
-        conversationId: msg.conversationId,
-        content: "I am thinking...",
-        sender: MessageSender.System,
+  function getConvMessages() {
+    return (conversationId: string) => {
+      const rawMessages = Object.values(entity.value).filter(
+        (item) => item.conversationId === conversationId,
+      );
+      rawMessages.sort((a, b) => {
+        return a.timestamp - b.timestamp;
       });
-      const context = await chatService.retrieveContext(msg.content);
-      const answer = await chatService.queryLLM(msg.content, context);
-      this.updateMessage({
-        ...loadingMsg,
-        content: answer || "Something wrong!",
-      });
-    },
-  },
+      return [
+        {
+          id: crypto.randomUUID(),
+          conversationId,
+          timestamp: 0,
+          ...INIT_MESSAGE,
+        },
+        ...rawMessages,
+      ];
+    };
+  }
+
+  function updateMessage(msg: MessageItem) {
+    entity.value[msg.id] = msg;
+  }
+  function delMessage(msgId: string) {
+    delete entity.value[msgId];
+  }
+  function sendMessage(
+    msg: Pick<MessageItem, "content" | "sender" | "conversationId" | "fake">,
+  ) {
+    const id = crypto.randomUUID();
+    const newMessage = {
+      id,
+      timestamp: new Date().valueOf(),
+      ...msg,
+    };
+    entity.value[id] = newMessage;
+    return newMessage;
+  }
+  async function sendLLMMessage(
+    msg: Pick<MessageItem, "content" | "sender" | "conversationId">,
+  ) {
+    sendMessage(msg);
+
+    const loadingMsg = sendMessage({
+      conversationId: msg.conversationId,
+      content: "I am thinking...",
+      sender: MessageSender.System,
+    });
+    const context = await chatService.retrieveContext(msg.content);
+    const answer = await chatService.queryLLM(msg.content, context);
+    updateMessage({
+      ...loadingMsg,
+      content: answer || "Something wrong!",
+    });
+  }
 });
