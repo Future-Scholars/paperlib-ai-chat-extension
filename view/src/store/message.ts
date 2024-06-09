@@ -1,5 +1,7 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { computed, ref } from "vue";
+
+export const MESSAGE_STORE_ID = "message";
 
 export enum MessageSender {
   User = "user",
@@ -21,10 +23,10 @@ export interface MessageItem {
   fake?: boolean;
 }
 
-export const useMessageStore = defineStore("message", () => {
+export const useMessageStore = defineStore(MESSAGE_STORE_ID, () => {
   const entity = ref<Record<string, MessageItem>>({});
 
-  function getConvMessages() {
+  const getConvMessages = computed(() => {
     return (conversationId: string) => {
       const rawMessages = Object.values(entity.value).filter(
         (item) => item.conversationId === conversationId,
@@ -42,7 +44,7 @@ export const useMessageStore = defineStore("message", () => {
         ...rawMessages,
       ];
     };
-  }
+  });
 
   function updateMessage(msg: MessageItem) {
     entity.value[msg.id] = msg;
@@ -79,4 +81,12 @@ export const useMessageStore = defineStore("message", () => {
       content: answer || "Something wrong!",
     });
   }
+  return {
+    entity,
+    getConvMessages,
+    delMessage,
+    updateMessage,
+    sendMessage,
+    sendLLMMessage,
+  };
 });
