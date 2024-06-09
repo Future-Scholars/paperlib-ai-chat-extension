@@ -16,10 +16,9 @@ localForage.config({
 export function usePersistState() {
   const messageStore = useMessageStore();
   const conversationStore = useConversationStore();
-  const loading = ref(false);
+  const loading = ref(true);
 
   onMounted(async () => {
-    loading.value = true;
     try {
       const storedMessage = await localForage.getItem<{
         entity?: Record<string, MessageItem>;

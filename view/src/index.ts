@@ -1,6 +1,6 @@
 import { createApp } from "vue";
 import { RendererRPCService } from "paperlib-api/rpc";
-import AppView from "./home.vue";
+import AppView from "./app.vue";
 import { ChatService } from "./services/chat-service";
 import { createPinia } from "pinia";
 
