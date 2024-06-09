@@ -55,6 +55,7 @@
     "dist"
   ],
   "dependencies": {
+    "@vueuse/core": "^10.10.0",
     "localforage": "^1.10.0"
   }
 }
