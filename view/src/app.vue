@@ -84,7 +84,8 @@ const loadPaperText = async () => {
   if (!paperEntity) {
     return;
   }
-  curConversationId.value = paperEntity._id as string;
+  //Template string to ensure the id is string
+  curConversationId.value = `${paperEntity._id as string}`;
   cleanFakedMessage(curConversationId.value);
   const loadingMessage = messageStore.sendMessage({
     fake: true,
