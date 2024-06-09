@@ -13,8 +13,10 @@ import {
 import { PLAPI, PLMainAPI } from "paperlib-api/api";
 import { MessageSender, useMessageStore } from "@/store/message.ts";
 import { storeToRefs } from "pinia";
+import { useConversationStore } from "@/store/conversation.ts";
 
 const messageStore = useMessageStore();
+useConversationStore();
 
 // Show some information about the paper
 const curPaperEntity = ref<

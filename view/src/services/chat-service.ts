@@ -3,6 +3,7 @@ import { PLAPI, PLExtAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
 import { EncoderService } from "./encoder-service";
 import { LLMService } from "./llm-service";
+import { useConversationStore } from "@/store/conversation.ts";
 
 export class ChatService {
   paperEntity?: PaperEntity;
@@ -40,7 +41,10 @@ export class ChatService {
       );
       return;
     }
-    const fulltext = await this.getFullText(url);
+    const fulltext = await this.getFullTextWithCache(
+      url,
+      `${this.paperEntity._id as string}`,
+    );
 
     this._embeddings = [];
     const words = fulltext.split(" ");
@@ -53,6 +57,24 @@ export class ChatService {
       const embedding = await this._encoderService.encode(paragraph);
       this._embeddings.push({ text: paragraph, embedding });
     }
+  }
+
+  async getFullTextWithCache(url: string, id: string) {
+    const conversationStore = useConversationStore();
+    const cachedConversation = conversationStore.getConversation(id);
+    console.log("cachedConversation:", cachedConversation);
+    if (cachedConversation?.fulltext) {
+      conversationStore.updateConversation(id, {
+        timestamp: new Date().valueOf(),
+      });
+      return cachedConversation.fulltext;
+    }
+    const fulltext = await this.getFullText(url);
+    conversationStore.setConversation({
+      id: id as ReturnType<typeof crypto.randomUUID>,
+      fulltext,
+    });
+    return fulltext;
   }
 
   async getFullText(url: string) {
@@ -70,13 +92,13 @@ export class ChatService {
       text = await PLExtAPI.extensionManagementService.callExtensionMethod(
         "@future-scholars/paperlib-ai-chat-extension",
         "llamaParse",
-        url
-      )
+        url,
+      );
     } else {
       text = (await getFullText(url)).join("\n");
     }
 
-    return text
+    return text;
   }
 
   async retrieveContext(text: string) {
@@ -96,7 +118,11 @@ export class ChatService {
       contextParagNum = 2;
     }
 
-    return await this._encoderService.retrieve(text, this._embeddings, contextParagNum);
+    return await this._encoderService.retrieve(
+      text,
+      this._embeddings,
+      contextParagNum,
+    );
   }
 
   async queryLLM(msg: string, context: string) {
