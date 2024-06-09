@@ -100,7 +100,7 @@ const loadPaperText = async () => {
   if (paperEntity) {
     curPaperEntity.value = paperEntity;
     await chatService.loadPaperEntity(paperEntity);
-    await chatService.initializeEncoder();
+    await chatService.initializeEncoderWithCache();
     ready.value = true;
     messageStore.updateMessage({
       ...loadingMessage,

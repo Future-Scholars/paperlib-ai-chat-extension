@@ -25,6 +25,28 @@ export class ChatService {
     this.paperEntity = paperEntity;
   }
 
+  async initializeEncoderWithCache() {
+    const id = `${this.paperEntity?._id}`;
+    const conversationStore = useConversationStore();
+    const cachedConversation = conversationStore.getConversation(id);
+    console.log("cachedConversation:", cachedConversation);
+    if (cachedConversation?.embeddings) {
+      conversationStore.updateConversation(id, {
+        timestamp: new Date().valueOf(),
+      });
+      this._embeddings = cachedConversation.embeddings;
+      return;
+    }
+    const embeddings = await this.initializeEncoder();
+    if (embeddings) {
+      conversationStore.setConversation({
+        id: id as ReturnType<typeof crypto.randomUUID>,
+        embeddings,
+      });
+      this._embeddings = embeddings;
+    }
+  }
+
   async initializeEncoder() {
     if (!this.paperEntity) {
       throw new Error("Paper entity not loaded");
@@ -41,12 +63,9 @@ export class ChatService {
       );
       return;
     }
-    const fulltext = await this.getFullTextWithCache(
-      url,
-      `${this.paperEntity._id as string}`,
-    );
+    const fulltext = await this.getFullText(url);
 
-    this._embeddings = [];
+    const embeddings: { text: string; embedding: number[] }[] = [];
     const words = fulltext.split(" ");
     const paragraphs: string[] = [];
     for (let i = 0; i < words.length; i += 256) {
@@ -55,26 +74,9 @@ export class ChatService {
 
     for (const paragraph of paragraphs) {
       const embedding = await this._encoderService.encode(paragraph);
-      this._embeddings.push({ text: paragraph, embedding });
+      embeddings.push({ text: paragraph, embedding });
     }
-  }
-
-  async getFullTextWithCache(url: string, id: string) {
-    const conversationStore = useConversationStore();
-    const cachedConversation = conversationStore.getConversation(id);
-    console.log("cachedConversation:", cachedConversation);
-    if (cachedConversation?.fulltext) {
-      conversationStore.updateConversation(id, {
-        timestamp: new Date().valueOf(),
-      });
-      return cachedConversation.fulltext;
-    }
-    const fulltext = await this.getFullText(url);
-    conversationStore.setConversation({
-      id: id as ReturnType<typeof crypto.randomUUID>,
-      fulltext,
-    });
-    return fulltext;
+    return embeddings;
   }
 
   async getFullText(url: string) {

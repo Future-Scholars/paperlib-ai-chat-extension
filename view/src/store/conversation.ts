@@ -5,8 +5,8 @@ export const CONVERSATION_STORE_ID = "conversation";
 
 export interface ConversationItem {
   id: ReturnType<typeof crypto.randomUUID>;
-  fulltext: string;
   timestamp: number;
+  embeddings: { text: string; embedding: number[] }[];
 }
 
 export const useConversationStore = defineStore(CONVERSATION_STORE_ID, () => {
@@ -17,7 +17,7 @@ export const useConversationStore = defineStore(CONVERSATION_STORE_ID, () => {
   });
 
   const setConversation = (
-    convItem: Pick<ConversationItem, "id" | "fulltext">,
+    convItem: Pick<ConversationItem, "id" | "embeddings">,
   ) => {
     entity.value[convItem.id] = {
       ...convItem,
@@ -27,7 +27,7 @@ export const useConversationStore = defineStore(CONVERSATION_STORE_ID, () => {
 
   const updateConversation = (
     id: string,
-    convItem: Partial<Pick<ConversationItem, "timestamp" | "fulltext">>,
+    convItem: Partial<Pick<ConversationItem, "timestamp" | "embeddings">>,
   ) => {
     const oldItem = entity.value[id];
     if (oldItem) {
