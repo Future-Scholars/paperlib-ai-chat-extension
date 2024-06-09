@@ -1,7 +1,7 @@
 import localForage from "localforage";
-import { MessageItem, useMessageStore } from "@/store/message.ts";
+import { MessageState, useMessageStore } from "@/store/message.ts";
 import {
-  ConversationItem,
+  ConversationState,
   useConversationStore,
 } from "@/store/conversation.ts";
 import { onMounted, ref } from "vue";
@@ -20,9 +20,9 @@ export function usePersistState() {
 
   onMounted(async () => {
     try {
-      const storedMessage = await localForage.getItem<{
-        entity?: Record<string, MessageItem>;
-      }>(messageStore.$id + "-state");
+      const storedMessage = await localForage.getItem<MessageState>(
+        messageStore.$id + "-state",
+      );
       //Delete fake messages
       if (storedMessage?.entity) {
         for (const id in storedMessage.entity) {
@@ -34,9 +34,9 @@ export function usePersistState() {
         messageStore.$patch(storedMessage);
       }
 
-      const storedConversation = await localForage.getItem<{
-        entity?: Record<ReturnType<typeof crypto.randomUUID>, ConversationItem>;
-      }>(conversationStore.$id + "-state");
+      const storedConversation = await localForage.getItem<ConversationState>(
+        conversationStore.$id + "-state",
+      );
 
       if (storedConversation?.entity) {
         const conversations = Object.values(storedConversation.entity);

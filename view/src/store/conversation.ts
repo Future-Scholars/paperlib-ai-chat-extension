@@ -9,8 +9,12 @@ export interface ConversationItem {
   embeddings: { text: string; embedding: number[] }[];
 }
 
+export interface ConversationState {
+  entity: Record<ReturnType<typeof crypto.randomUUID>, ConversationItem>;
+}
+
 export const useConversationStore = defineStore(CONVERSATION_STORE_ID, () => {
-  const entity = ref<Record<string, ConversationItem>>({});
+  const entity = ref<ConversationState["entity"]>({});
 
   const getConversation = computed(() => {
     return (id: string) => entity.value[id];
