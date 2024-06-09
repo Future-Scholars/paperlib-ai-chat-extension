@@ -53,8 +53,5 @@
   ],
   "files": [
     "dist"
-  ],
-  "dependencies": {
-    "localforage": "^1.10.0"
-  }
+  ]
 }
