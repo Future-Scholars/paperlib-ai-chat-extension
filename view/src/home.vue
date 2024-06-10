@@ -2,22 +2,20 @@
 import { computed, onMounted, ref } from "vue";
 import { PaperEntity } from "paperlib-api/model";
 import { disposable } from "@/base/dispose.ts";
-import { processId } from "paperlib-api/utils";
-import { BIconX } from "bootstrap-icons-vue";
 import {
   MessageInput,
   MessageList,
   WindowPin,
   PaperSelector,
+  CloseWindowBtn,
 } from "./components";
-import { PLAPI, PLMainAPI } from "paperlib-api/api";
+import { PLAPI } from "paperlib-api/api";
 import { MessageSender, useMessageStore } from "@/store/message.ts";
 import { storeToRefs } from "pinia";
 import { useConversationStore } from "@/store/conversation.ts";
 
 const messageStore = useMessageStore();
 useConversationStore();
-
 // Show some information about the paper
 const curPaperEntity = ref<
   Pick<PaperEntity, "title" | "authors" | "publication" | "pubTime">
@@ -31,12 +29,12 @@ const curPaperEntity = ref<
 const curConversationId = ref("");
 
 const { getConvMessages } = storeToRefs(messageStore);
+
 const messageItems = computed(() =>
   getConvMessages.value(curConversationId.value),
 );
 const msgInputRef = ref<{ inputRef: HTMLInputElement | null } | null>(null);
 const msgListRef = ref<{ listRef: HTMLDivElement | null } | null>(null);
-const windowPinRef = ref<{ pinned: boolean }>({ pinned: false });
 const ready = ref(false);
 const loading = ref(false);
 
@@ -110,15 +108,6 @@ const loadPaperText = async () => {
   }
 };
 
-const closeWindow = () => {
-  PLMainAPI.windowProcessManagementService.forceClose(
-    "paperlib-ai-chat-extension-window",
-  );
-  if (windowPinRef.value?.pinned) {
-    PLMainAPI.windowProcessManagementService.focus(processId.renderer);
-  }
-};
-
 const sendMessage = async (event: KeyboardEvent) => {
   try {
     loading.value = true;
@@ -148,18 +137,10 @@ onMounted(() => {
 <template>
   <div class="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-800">
     <div id="title-bar" class="flex flex-none space-x-2 w-full pt-3 pl-3 pr-3">
-      <paper-selector
-        :cur-paper-entity="curPaperEntity"
-        :pinned="windowPinRef.pinned"
-      ></paper-selector>
+      <paper-selector :cur-paper-entity="curPaperEntity"></paper-selector>
       <div class="flex space-x-1 font-semibold text-neutral-700 flex-none">
         <window-pin></window-pin>
-        <div
-          class="flex w-8 h-8 rounded-md hover:bg-neutral-300 transition-colors cursor-pointer bg-neutral-200 dark:bg-neutral-700 dark:border-neutral-600 dark:text-white hover:dark:bg-neutral-500"
-          @click="closeWindow"
-        >
-          <BIconX class="text-lg m-auto" />
-        </div>
+        <close-window-btn></close-window-btn>
       </div>
     </div>
     <hr
