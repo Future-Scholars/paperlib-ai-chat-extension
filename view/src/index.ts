@@ -2,14 +2,21 @@ import { createApp } from "vue";
 import { RendererRPCService } from "paperlib-api/rpc";
 import AppView from "./app.vue";
 import { ChatService } from "./services/chat-service";
+import { createPinia } from "pinia";
+import { indexDbPlugin } from "@/utils/persist.ts";
+
+const pinia = createPinia();
+
+pinia.use(indexDbPlugin);
 
 async function initialize() {
   const app = createApp(AppView);
+  app.use(pinia);
 
   // ============================================================
   // 1. Initilize the RPC service for current process
   const rpcService = new RendererRPCService(
-    "paperlib-ai-chat-extension-window"
+    "paperlib-ai-chat-extension-window",
   );
   // ============================================================
   // 2. Start the port exchange process.
@@ -20,7 +27,7 @@ async function initialize() {
   const mainAPIExposed = await rpcService.waitForAPI(
     "mainProcess",
     "PLMainAPI",
-    5000
+    5000,
   );
 
   if (!mainAPIExposed) {
@@ -33,7 +40,7 @@ async function initialize() {
   const rendererAPIExposed = await rpcService.waitForAPI(
     "rendererProcess",
     "PLAPI",
-    5000
+    5000,
   );
 
   if (!rendererAPIExposed) {
@@ -46,7 +53,7 @@ async function initialize() {
   const extensionAPIExposed = await rpcService.waitForAPI(
     "extensionProcess",
     "PLExtAPI",
-    5000
+    5000,
   );
 
   if (!extensionAPIExposed) {
