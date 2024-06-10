@@ -18,6 +18,8 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup lang="ts">
+const name = "Spin";
+</script>
 
 <style lang="scss" scoped></style>
