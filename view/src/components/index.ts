@@ -3,5 +3,13 @@ import MessageList from "./MessageList/index.vue";
 import WindowPin from "./WindowPin/index.vue";
 import PaperSelector from "./PaperSelector/index.vue";
 import Spin from "./Spin/index.vue";
+import CloseWindowBtn from "./CloseWindowBtn/index.vue";
 
-export { MessageInput, MessageList, WindowPin, PaperSelector, Spin };
+export {
+  MessageInput,
+  MessageList,
+  WindowPin,
+  PaperSelector,
+  Spin,
+  CloseWindowBtn,
+};
