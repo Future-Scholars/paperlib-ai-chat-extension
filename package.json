@@ -26,6 +26,7 @@
     "bootstrap-icons-vue": "^1.11.3",
     "compute-cosine-similarity": "^1.1.0",
     "cssnano": "^6.0.2",
+    "franc": "^6.2.0",
     "localforage": "^1.10.0",
     "paperlib-api": "^0.1.8",
     "pdfjs-dist": "^4.0.269",
