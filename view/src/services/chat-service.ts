@@ -1,19 +1,18 @@
-import { getFullText } from "@/utils/pdfjs/utils";
+import { LLMsAPI } from "@future-scholars/llms-api-service"
 import { PLAPI, PLExtAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
+
+import { getFullText } from "@/utils/pdfjs/utils";
 import { EncoderService } from "./encoder-service";
-import { LLMService } from "./llm-service";
 
 export class ChatService {
   paperEntity?: PaperEntity;
   private _embeddings: { text: string; embedding: number[] }[] = [];
 
   private readonly _encoderService: EncoderService;
-  private readonly _llmService: LLMService;
 
   constructor() {
     this._encoderService = new EncoderService();
-    this._llmService = new LLMService();
   }
 
   async loadPaperEntity(paperEntity: PaperEntity) {
@@ -100,6 +99,44 @@ export class ChatService {
   }
 
   async queryLLM(msg: string, context: string) {
-    return await this._llmService.query(msg, context);
+    const model = (await PLExtAPI.extensionPreferenceService.get(
+      "@future-scholars/paperlib-ai-chat-extension",
+      "ai-model",
+    )) as string;
+
+    const customAPIURL = (await PLExtAPI.extensionPreferenceService.get(
+      "@future-scholars/paperlib-ai-chat-extension",
+      "customAPIURL",
+    )) as string;
+
+    let apiKey = "";
+
+    const modelServiceProvider = LLMsAPI.modelServiceProvider(model);
+    if (modelServiceProvider === "Gemini") {
+      apiKey = (await PLExtAPI.extensionPreferenceService.get(
+        "@future-scholars/paperlib-ai-chat-extension",
+        "gemini-api-key",
+      )) as string;
+    } else if (modelServiceProvider === "OpenAI") {
+      apiKey = (await PLExtAPI.extensionPreferenceService.get(
+        "@future-scholars/paperlib-ai-chat-extension",
+        "openai-api-key",
+      )) as string;
+    } else if (modelServiceProvider === "Perplexity") {
+      apiKey = (await PLExtAPI.extensionPreferenceService.get(
+        "@future-scholars/paperlib-ai-chat-extension",
+        "perplexity-api-key",
+      )) as string;
+    }
+
+    const query = `I'm reading a paper, I have a question: ${msg}. Please help me answer it with the following context: ${context}.`;
+
+    const answer = await LLMsAPI.model(model)
+      .setSystemInstruction("You are a academic paper explainer, skilled in explaining content of a paper.")
+      .setAPIKey(apiKey)
+      .setAPIURL(customAPIURL)
+      .query(query);
+
+    return answer;
   }
 }
