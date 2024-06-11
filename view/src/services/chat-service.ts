@@ -140,6 +140,11 @@ export class ChatService {
         "@future-scholars/paperlib-ai-chat-extension",
         "perplexity-api-key",
       )) as string;
+    } else if (modelServiceProvider === "Zhipu") {
+      apiKey = (await PLExtAPI.extensionPreferenceService.get(
+        "@future-scholars/paperlib-ai-chat-extension",
+        "zhipu-api-key",
+      )) as string;
     }
 
     return { model, customAPIURL, apiKey }
@@ -149,8 +154,6 @@ export class ChatService {
     const { model, customAPIURL, apiKey } = await this.llmConfig();
 
     const query = `I'm reading a paper, I have a question: ${msg}. Please help me answer it with the following context: ${context}.`;
-
-    console.log(query)
 
     const answer = await LLMsAPI.model(model)
       .setSystemInstruction(`You are a academic paper explainer, skilled in explaining content of a paper. You should answer the question in ${anwserLang}.`)
