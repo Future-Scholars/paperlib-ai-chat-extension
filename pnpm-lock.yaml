@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 devDependencies:
+  '@future-scholars/llms-api-service':
+    specifier: ^0.0.4
+    version: 0.0.4
   '@future-scholars/vite-plugin-electron-renderer':
     specifier: ^0.14.3
     version: 0.14.3
@@ -20,9 +23,6 @@ devDependencies:
   '@xenova/transformers':
     specifier: ^2.17.0
     version: 2.17.1
-  array-keyed-map:
-    specifier: ^2.1.3
-    version: 2.1.3
   autoprefixer:
     specifier: ^10.4.16
     version: 10.4.19(postcss@8.4.38)
@@ -35,9 +35,9 @@ devDependencies:
   cssnano:
     specifier: ^6.0.2
     version: 6.1.2(postcss@8.4.38)
-  gpt3-tokenizer:
-    specifier: ^1.1.5
-    version: 1.1.5
+  franc:
+    specifier: ^6.2.0
+    version: 6.2.0
   localforage:
     specifier: ^1.10.0
     version: 1.10.0
@@ -435,6 +435,11 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@future-scholars/llms-api-service@0.0.4:
+    resolution: {integrity: sha512-K+sma1EEWA5qI7NQrCqyGWE5xVQBa1U2HQrIXZLoAFj8kVkTcvwRAy7zSxIh7bd1EYMdlL47wOfPma2f8pElkQ==}
+    engines: {node: '>=18.16.1'}
+    dev: true
 
   /@future-scholars/vite-plugin-electron-renderer@0.14.3:
     resolution: {integrity: sha512-gGTEIVIQdgWNQZzCSxpLLcPFThoQexbgu2Lc8uMrvNnXrK2m8BpolpJZfdOhP1++L9UriWb+gkkGJc7FRhsfKg==}
@@ -970,10 +975,6 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /array-keyed-map@2.1.3:
-    resolution: {integrity: sha512-JIUwuFakO+jHjxyp4YgSiKXSZeC0U+R1jR94bXWBcVlFRBycqXlb+kH9JHxBGcxnVuSqx5bnn0Qz9xtSeKOjiA==}
-    dev: true
-
   /array-union@2.1.0:
     resolution: {integrity: sha512-HGyxoOTYUyCM6stUe6EJgnd4EoewAI7zMdfqO+kGjnlZmBDz/cR5pf8r/cR4Wq60sL/p0IkcjUEEPwS3GFrIyw==}
     engines: {node: '>=8'}
@@ -1300,6 +1301,10 @@ packages:
     resolution: {integrity: sha512-ROoL94jJH2dUVML2Y/5PEDNaSHgeOdSDicUyS7izcF63G6sTc/FTjLub4b8Il9S8S0beOfYt0TaA5qvFK+w0wA==}
     dependencies:
       mimic-response: 1.0.1
+    dev: true
+
+  /collapse-white-space@2.1.0:
+    resolution: {integrity: sha512-loKTxY1zCOuG4j9f6EPnuyyYkf58RnhhWTvRoZEokgB+WbdXehfjFviyOVYkqzEWz1Q5kRiZdBYS5SwxbQYwzw==}
     dev: true
 
   /color-convert@2.0.1:
@@ -2027,6 +2032,12 @@ packages:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
     dev: true
 
+  /franc@6.2.0:
+    resolution: {integrity: sha512-rcAewP7PSHvjq7Kgd7dhj82zE071kX5B4W1M4ewYMf/P+i6YsDQmj62Xz3VQm9zyUzUXwhIde/wHLGCMrM+yGg==}
+    dependencies:
+      trigram-utils: 2.0.1
+    dev: true
+
   /fs-constants@1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
     dev: true
@@ -2232,13 +2243,6 @@ packages:
       lowercase-keys: 2.0.0
       p-cancelable: 2.1.1
       responselike: 2.0.1
-    dev: true
-
-  /gpt3-tokenizer@1.1.5:
-    resolution: {integrity: sha512-O9iCL8MqGR0Oe9wTh0YftzIbysypNQmS5a5JG3cB3M4LMYjlAVvNnf8LUzVY9MrI7tj+YLY356uHtO2lLX2HpA==}
-    engines: {node: '>=12'}
-    dependencies:
-      array-keyed-map: 2.1.3
     dev: true
 
   /graceful-fs@4.2.11:
@@ -2775,6 +2779,10 @@ packages:
       any-promise: 1.3.0
       object-assign: 4.1.1
       thenify-all: 1.6.0
+    dev: true
+
+  /n-gram@2.0.2:
+    resolution: {integrity: sha512-S24aGsn+HLBxUGVAUFOwGpKs7LBcG4RudKU//eWzt/mQ97/NMKQxDWHyHx63UNWk/OOdihgmzoETn1tf5nQDzQ==}
     dev: true
 
   /nan@2.19.0:
@@ -4252,6 +4260,13 @@ packages:
 
   /tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+    dev: true
+
+  /trigram-utils@2.0.1:
+    resolution: {integrity: sha512-nfWIXHEaB+HdyslAfMxSqWKDdmqY9I32jS7GnqpdWQnLH89r6A5sdk3fDVYqGAZ0CrT8ovAFSAo6HRiWcWNIGQ==}
+    dependencies:
+      collapse-white-space: 2.1.0
+      n-gram: 2.0.2
     dev: true
 
   /ts-interface-checker@0.1.13:

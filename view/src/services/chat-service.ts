@@ -1,20 +1,22 @@
-import { getFullText } from "@/utils/pdfjs/utils";
+import { LLMsAPI } from "@future-scholars/llms-api-service"
+import { franc } from 'franc'
 import { PLAPI, PLExtAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
+
+import { getFullText } from "@/utils/pdfjs/utils";
+import { langCodes } from "@/utils/iso-639-3";
 import { EncoderService } from "./encoder-service";
-import { LLMService } from "./llm-service";
 import { useConversationStore } from "@/store/conversation.ts";
 
 export class ChatService {
   paperEntity?: PaperEntity;
   private _embeddings: { text: string; embedding: number[] }[] = [];
+  embeddingLangCode = "eng";
 
   private readonly _encoderService: EncoderService;
-  private readonly _llmService: LLMService;
 
   constructor() {
     this._encoderService = new EncoderService();
-    this._llmService = new LLMService();
   }
 
   async loadPaperEntity(paperEntity: PaperEntity) {
@@ -66,6 +68,15 @@ export class ChatService {
     const fulltext = await this.getFullText(url);
 
     const embeddings: { text: string; embedding: number[] }[] = [];
+    // 2. Get the language of the paper.
+    const lang = franc(fulltext.slice(0, 200), { minLength: 10 })
+    if (lang === "und") {
+      this.embeddingLangCode = "eng";
+    } else {
+      this.embeddingLangCode = lang;
+    }
+
+    this._embeddings = [];
     const words = fulltext.split(" ");
     const paragraphs: string[] = [];
     for (let i = 0; i < words.length; i += 256) {
@@ -108,6 +119,8 @@ export class ChatService {
       throw new Error("Paper entity not loaded");
     }
 
+    const translatedText = await this.translateText(text);
+
     const model = (await PLExtAPI.extensionPreferenceService.get(
       "@future-scholars/paperlib-ai-chat-extension",
       "ai-model",
@@ -121,13 +134,141 @@ export class ChatService {
     }
 
     return await this._encoderService.retrieve(
-      text,
+      translatedText,
       this._embeddings,
       contextParagNum,
-    );
+    );}
+
+  async llmConfig() {
+    const model = (await PLExtAPI.extensionPreferenceService.get(
+      "@future-scholars/paperlib-ai-chat-extension",
+      "ai-model",
+    )) as string;
+
+    const customAPIURL = (await PLExtAPI.extensionPreferenceService.get(
+      "@future-scholars/paperlib-ai-chat-extension",
+      "customAPIURL",
+    )) as string;
+
+    let apiKey = "";
+
+    const modelServiceProvider = LLMsAPI.modelServiceProvider(model);
+    if (modelServiceProvider === "Gemini") {
+      apiKey = (await PLExtAPI.extensionPreferenceService.get(
+        "@future-scholars/paperlib-ai-chat-extension",
+        "gemini-api-key",
+      )) as string;
+    } else if (modelServiceProvider === "OpenAI") {
+      apiKey = (await PLExtAPI.extensionPreferenceService.get(
+        "@future-scholars/paperlib-ai-chat-extension",
+        "openai-api-key",
+      )) as string;
+    } else if (modelServiceProvider === "Perplexity") {
+      apiKey = (await PLExtAPI.extensionPreferenceService.get(
+        "@future-scholars/paperlib-ai-chat-extension",
+        "perplexity-api-key",
+      )) as string;
+    } else if (modelServiceProvider === "Zhipu") {
+      apiKey = (await PLExtAPI.extensionPreferenceService.get(
+        "@future-scholars/paperlib-ai-chat-extension",
+        "zhipu-api-key",
+      )) as string;
+    }
+
+    return { model, customAPIURL, apiKey }
   }
 
-  async queryLLM(msg: string, context: string) {
-    return await this._llmService.query(msg, context);
+  async queryLLM(msg: string, context: string, anwserLang: string = "English") {
+    const { model, customAPIURL, apiKey } = await this.llmConfig();
+
+    const query = `I'm reading a paper, I have a question: ${msg}. Please help me answer it with the following context: ${context}.`;
+
+    const answer = await LLMsAPI.model(model)
+      .setSystemInstruction(`You are a academic paper explainer, skilled in explaining content of a paper. You should answer the question in ${anwserLang}.`)
+      .setAPIKey(apiKey)
+      .setAPIURL(customAPIURL)
+      .query(query, undefined, async (url: string, headers: Record<string, string>, body: any) => {
+        const response = (await PLExtAPI.networkTool.post(
+          url,
+          body,
+          headers,
+          0,
+          300000,
+          false,
+          true,
+        )) as any;
+
+        if (
+          response.body instanceof String ||
+          typeof response.body === "string"
+        ) {
+          return JSON.parse(response.body);
+        } else {
+          return response.body;
+        }
+      }, true);
+
+    return answer;
+  }
+
+  detectTextLang(text: string) {
+    const langCode = franc(text, { minLength: 10 });
+
+    return { code: langCode, name: langCodes[langCode] }
+  }
+
+  async translateText(text: string, target: string = "English") {
+    const { model, customAPIURL, apiKey } = await this.llmConfig();
+
+    let additionalArgs: any = undefined;
+    if (LLMsAPI.modelServiceProvider(model) === "Gemini") {
+      additionalArgs = {
+        generationConfig: { responseMimeType: "application/json" },
+      }
+    } else if (LLMsAPI.modelServiceProvider(model) === "OpenAI" && (model === "gpt-3.5-turbo-1106" || model === "gpt-4-turbo" || model === "gpt-4o")) {
+      additionalArgs = {
+        response_format: { "type": "json_object" },
+      }
+    }
+
+    const query = `Translate the following text to ${target}: ${text}`;
+
+    try {
+      const response = await LLMsAPI.model(model)
+        .setSystemInstruction(`You are a professional translator. Please just give me a JSON stringified string like {"translationResult": "..."} without any other content, which can be directly parsed by JSON.parse().`)
+        .setAPIKey(apiKey)
+        .setAPIURL(customAPIURL)
+        .query(query, additionalArgs, async (url: string, headers: Record<string, string>, body: any) => {
+          const response = (await PLExtAPI.networkTool.post(
+            url,
+            body,
+            headers,
+            0,
+            300000,
+            false,
+            true,
+          )) as any;
+
+          if (
+            response.body instanceof String ||
+            typeof response.body === "string"
+          ) {
+            return JSON.parse(response.body);
+          } else {
+            return response.body;
+          }
+        }, true);
+
+      const translation = LLMsAPI.parseJSON(response).translationResult as string;
+      return translation;
+    } catch (error) {
+      PLAPI.logService.error(
+        "Failed to translate the question.",
+        error as Error,
+        true,
+        "AIChatExt",
+      );
+      return text;
+    }
   }
 }

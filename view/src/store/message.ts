@@ -78,8 +78,10 @@ export const useMessageStore = defineStore(MESSAGE_STORE_ID, () => {
       content: "I am thinking...",
       sender: MessageSender.System,
     });
-    const context = await chatService.retrieveContext(msg.content);
-    const answer = await chatService.queryLLM(msg.content, context);
+    const lang = chatService.detectTextLang(msg.content);
+    const translatedMsgContent = lang.code === chatService.embeddingLangCode ? msg.content : await chatService.translateText(msg.content, chatService.embeddingLangCode);
+    const context = await chatService.retrieveContext(translatedMsgContent);
+    const answer = await chatService.queryLLM(translatedMsgContent, context, lang.name);
     updateMessage({
       ...loadingMsg,
       content: answer || "Something wrong!",
