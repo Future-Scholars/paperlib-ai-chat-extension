@@ -7,6 +7,7 @@ export interface ConversationItem {
   id: ReturnType<typeof crypto.randomUUID>;
   timestamp: number;
   embeddings: { text: string; embedding: number[] }[];
+  embeddingLangCode: string;
 }
 
 export interface ConversationState {
@@ -21,7 +22,7 @@ export const useConversationStore = defineStore(CONVERSATION_STORE_ID, () => {
   });
 
   const setConversation = (
-    convItem: Pick<ConversationItem, "id" | "embeddings">,
+    convItem: Pick<ConversationItem, "id" | "embeddings" | "embeddingLangCode">,
   ) => {
     entity.value[convItem.id] = {
       ...convItem,
