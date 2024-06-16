@@ -23,14 +23,20 @@ import {
 
 import { PLMainAPI } from "paperlib-api/api";
 
-import { nextTick, ref } from "vue";
-const pinned = ref(true);
+import { nextTick } from "vue";
 import { processId } from "paperlib-api/utils";
 
 const windowID = "paperlib-ai-chat-extension-window";
 
+import { useWindowStore } from "@/store/window.ts";
+import { storeToRefs } from "pinia";
+
+const windowStore = useWindowStore();
+
+const { pinned } = storeToRefs(windowStore);
+
 const unpin = async () => {
-  pinned.value = false;
+  windowStore.setPinned(false);
   await nextTick(async () => {
     await PLMainAPI.windowProcessManagementService.setParentWindow(
       null,
@@ -45,7 +51,7 @@ const unpin = async () => {
 };
 
 const pin = async () => {
-  pinned.value = true;
+  windowStore.setPinned(true);
   await PLMainAPI.windowProcessManagementService.setParentWindow(
     processId.renderer,
     windowID,

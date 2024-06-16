@@ -23,8 +23,12 @@ export interface MessageItem {
   fake?: boolean;
 }
 
+export interface MessageState {
+  entity: Record<ReturnType<typeof crypto.randomUUID>, MessageItem>;
+}
+
 export const useMessageStore = defineStore(MESSAGE_STORE_ID, () => {
-  const entity = ref<Record<string, MessageItem>>({});
+  const entity = ref<MessageState["entity"]>({});
 
   const getConvMessages = computed(() => {
     return (conversationId: string) => {

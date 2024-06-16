@@ -1,33 +1,78 @@
 import localForage from "localforage";
-import { Store } from "pinia";
-import { MESSAGE_STORE_ID, MessageItem } from "@/store/message.ts";
+import { MessageState, useMessageStore } from "@/store/message.ts";
+import {
+  ConversationState,
+  useConversationStore,
+} from "@/store/conversation.ts";
+import { onMounted, ref } from "vue";
+
+const MAX_CONVERSATION_NUM = 5;
 
 localForage.config({
   driver: [localForage.INDEXEDDB],
   name: "ai-chat-extension",
 });
 
-export async function indexDbPlugin({ store }: { store: Store }) {
-  if (store.$id === MESSAGE_STORE_ID) {
-    const stored = await localForage.getItem<{
-      entity?: Record<string, MessageItem>;
-    } | null>(store.$id + "-state");
-    if (stored) {
+export function usePersistState() {
+  const messageStore = useMessageStore();
+  const conversationStore = useConversationStore();
+  const loading = ref(true);
+
+  onMounted(async () => {
+    try {
+      const storedMessage = await localForage.getItem<MessageState>(
+        messageStore.$id + "-state",
+      );
       //Delete fake messages
-      if (stored.entity) {
-        for (const id in stored.entity) {
-          if (stored.entity[id].fake) {
-            delete stored.entity[id];
+      if (storedMessage?.entity) {
+        for (const id in storedMessage.entity) {
+          if (storedMessage.entity[id].fake) {
+            delete storedMessage.entity[id];
           }
         }
+
+        messageStore.$patch(storedMessage);
       }
-      store.$patch(stored);
+
+      const storedConversation = await localForage.getItem<ConversationState>(
+        conversationStore.$id + "-state",
+      );
+
+      if (storedConversation?.entity) {
+        const conversations = Object.values(storedConversation.entity);
+        if (conversations.length > MAX_CONVERSATION_NUM) {
+          conversations.sort((a, b) => {
+            return a.timestamp - b.timestamp;
+          });
+          const newConversationIds = conversations
+            .slice(0, MAX_CONVERSATION_NUM)
+            .map((item) => item.id);
+
+          for (const id in storedConversation.entity) {
+            if (
+              !newConversationIds.includes(
+                id as ReturnType<typeof crypto.randomUUID>,
+              )
+            ) {
+              delete storedConversation.entity[id];
+            }
+          }
+        }
+        conversationStore.$patch(storedConversation);
+      }
+
+      [messageStore, conversationStore].forEach((store) => {
+        store.$subscribe(() => {
+          localForage.setItem(
+            store.$id + "-state",
+            JSON.parse(JSON.stringify(store.$state)),
+          ); // Destructure to transform to plain object
+        });
+      });
+    } finally {
+      loading.value = false;
     }
-    store.$subscribe(() => {
-      localForage.setItem(
-        store.$id + "-state",
-        JSON.parse(JSON.stringify(store.$state)),
-      ); // Destructure to transform to plain object
-    });
-  }
+  });
+
+  return { loading };
 }

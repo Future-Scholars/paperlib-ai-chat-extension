@@ -3,11 +3,8 @@ import { RendererRPCService } from "paperlib-api/rpc";
 import AppView from "./app.vue";
 import { ChatService } from "./services/chat-service";
 import { createPinia } from "pinia";
-import { indexDbPlugin } from "@/utils/persist.ts";
 
 const pinia = createPinia();
-
-pinia.use(indexDbPlugin);
 
 async function initialize() {
   const app = createApp(AppView);
