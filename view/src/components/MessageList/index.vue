@@ -6,16 +6,16 @@
         class="flex-none flex justify-start w-full"
       >
         <div
-          class="flex-none bg-neutral-200 p-2 rounded-t-lg rounded-br-lg max-w-[75%] dark:bg-neutral-700 dark:text-white"
+          class="flex-none bg-neutral-200 p-2 rounded-t-lg rounded-br-lg lg:max-w-[60%] md:max-w-[75%] max-w-[90%] dark:bg-neutral-700 dark:text-white"
         >
-          <span>{{ msg.content }}</span>
+          <span v-html="msg.content"></span>
         </div>
       </div>
       <div v-else class="flex-none flex justify-end w-full">
         <div
-          class="flex-none bg-neutral-500 p-2 rounded-t-lg rounded-bl-lg max-w-[75%] text-neutral-50 dark:text-white dark:bg-neutral-600"
+          class="flex-none bg-neutral-500 p-2 rounded-t-lg rounded-bl-lg lg:max-w-[60%] md:max-w-[75%] max-w-[90%] text-neutral-50 dark:text-white dark:bg-neutral-600"
         >
-          <span>{{ msg.content }}</span>
+          <span v-html="msg.content"></span>
         </div>
       </div>
     </div>
@@ -31,4 +31,18 @@ const listRef = ref<HTMLDivElement | null>(null);
 defineExpose({ listRef });
 </script>
 
-<style scoped></style>
+<style>
+ul {
+  list-style-type: disc !important;
+  margin-left: 2em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ol {
+  list-style-type: decimal !important;
+  margin-left: 2em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+</style>

@@ -180,7 +180,10 @@ export class ChatService {
         }
       }, true);
 
-    return answer;
+    // render markdown
+    const htmlAnswer = (await PLAPI.renderService.renderMarkdown(answer, true)).renderedStr;
+
+    return htmlAnswer;
   }
 
   detectTextLang(text: string) {
