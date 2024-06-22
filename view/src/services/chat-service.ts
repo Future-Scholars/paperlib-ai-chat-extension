@@ -32,11 +32,15 @@ export class ChatService {
     const conversationStore = useConversationStore();
     const cachedConversation = conversationStore.getConversation(id);
     console.log("cachedConversation:", cachedConversation);
-    if (cachedConversation?.embeddings) {
+    if (
+      cachedConversation?.embeddings &&
+      cachedConversation.embeddingLangCode
+    ) {
       conversationStore.updateConversation(id, {
         timestamp: new Date().valueOf(),
       });
       this._embeddings = cachedConversation.embeddings;
+      this.embeddingLangCode = cachedConversation.embeddingLangCode;
       return;
     }
     const encodeResult = await this.initializeEncoder();

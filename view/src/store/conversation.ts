@@ -18,7 +18,7 @@ export const useConversationStore = defineStore(CONVERSATION_STORE_ID, () => {
   const entity = ref<ConversationState["entity"]>({});
 
   const getConversation = computed(() => {
-    return (id: string) => entity.value[id];
+    return (id: string) => entity.value[id] as undefined | ConversationItem;
   });
 
   const setConversation = (
