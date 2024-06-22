@@ -42,7 +42,7 @@ export function usePersistState() {
         const conversations = Object.values(storedConversation.entity);
         if (conversations.length > MAX_CONVERSATION_NUM) {
           conversations.sort((a, b) => {
-            return a.timestamp - b.timestamp;
+            return b.timestamp - a.timestamp;
           });
           const newConversationIds = conversations
             .slice(0, MAX_CONVERSATION_NUM)
