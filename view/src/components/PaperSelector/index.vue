@@ -13,13 +13,18 @@
 
 <script setup lang="ts">
 import { PaperEntity } from "paperlib-api/model";
+import { useWindowStore } from "@/store/window.ts";
+import { storeToRefs } from "pinia";
+
+const windowStore = useWindowStore();
 defineProps<{
   curPaperEntity: Pick<
     PaperEntity,
     "title" | "authors" | "publication" | "pubTime"
   >;
-  pinned: boolean;
 }>();
+
+const { pinned } = storeToRefs(windowStore);
 </script>
 
 <style scoped>
