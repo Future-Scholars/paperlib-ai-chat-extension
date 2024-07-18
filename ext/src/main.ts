@@ -1,9 +1,9 @@
+import { createReadStream } from "fs";
 import { PLAPI, PLExtAPI, PLExtension, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
 import { processId, urlUtils } from "paperlib-api/utils";
 import path from "path";
-import { createReadStream } from 'fs';
-import { blob } from 'stream/consumers';
+import { blob } from "stream/consumers";
 
 const extID = "@future-scholars/paperlib-ai-chat-extension";
 
@@ -30,7 +30,8 @@ class PaperlibAIChatExtension extends PLExtension {
         "llama-parse-api-key": {
           type: "string",
           name: "Llama Parse API Key",
-          description: "The API key for Llama Parse. Obtain from https://cloud.llamaindex.ai/parse",
+          description:
+            "The API key for Llama Parse. Obtain from https://cloud.llamaindex.ai/parse",
           value: "",
           order: 0,
         },
@@ -56,13 +57,14 @@ class PaperlibAIChatExtension extends PLExtension {
             "gpt-4-1106-preview": "GPT-4 1106 Preview",
             "gpt-4-turbo": "GPT-4 Turbo",
             "gpt-4o": "GPT-4o",
+            "gpt-4o-mini": "GPT-4o Mini",
             "codellama-70b-instruct": "Perplexity codellama-70b",
             "mistral-7b-instruct": "Perplexity mistral-7b",
             "mixtral-8x7b-instruct": "Perplexity mistral-8x7b",
             "sonar-small-chat": "Perplexity sonar-small-chat",
             "sonar-medium-chat": "Perplexity sonar-medium-chat",
           },
-          value: "gemini-1.5-pro",
+          value: "gpt-4o-mini",
           order: 1,
         },
         "gemini-api-key": {
@@ -99,6 +101,14 @@ class PaperlibAIChatExtension extends PLExtension {
           description: "The proxied API URL.",
           value: "",
           order: 5,
+        },
+        customModelCode: {
+          type: "string",
+          name: "Custom Model Code",
+          description:
+            "The custom model code. If not empty, use the custom model. Otherwise, use the selected model.",
+          value: "",
+          order: 6,
         },
       },
     });
@@ -303,59 +313,59 @@ class PaperlibAIChatExtension extends PLExtension {
       "llama-parse-api-key",
     )) as string;
 
-    const fileBlob = await blob(createReadStream(urlUtils.eraseProtocol(url)))
+    const fileBlob = await blob(createReadStream(urlUtils.eraseProtocol(url)));
     const results = await PLExtAPI.networkTool.postForm(
       "https://api.cloud.llamaindex.ai/api/parsing/upload",
       {
-        file: fileBlob
+        file: fileBlob,
       } as any,
       {
-        "accept": "application/json",
-        "Authorization": `Bearer ${llamaParseAPIKey}`,
+        accept: "application/json",
+        Authorization: `Bearer ${llamaParseAPIKey}`,
       },
       1,
       240000,
-      true
-    )
-    const id = results.body.id
+      true,
+    );
+    const id = results.body.id;
 
     // Wait for the parsing to finish, check every 5 seconds
-    let status = "PENDING"
+    let status = "PENDING";
     while (status === "PENDING") {
-      await new Promise((resolve) => setTimeout(resolve, 5000))
+      await new Promise((resolve) => setTimeout(resolve, 5000));
       const statusRes = await PLExtAPI.networkTool.get(
         `https://api.cloud.llamaindex.ai/api/parsing/job/${id}`,
         {
-          "accept": "application/json",
-          "Authorization": `Bearer ${llamaParseAPIKey}`,
+          accept: "application/json",
+          Authorization: `Bearer ${llamaParseAPIKey}`,
         },
         1,
         5000,
         false,
-        true
-      )
-      status = statusRes.body.status
+        true,
+      );
+      status = statusRes.body.status;
     }
 
     if (status === "ERROR") {
-      throw new Error("Llama Parse failed")
-    } 
+      throw new Error("Llama Parse failed");
+    }
 
     if (status === "SUCCESS") {
-      console.log("Parsing successful")
+      console.log("Parsing successful");
       const textRes = await PLExtAPI.networkTool.get(
         `https://api.cloud.llamaindex.ai/api/parsing/job/${id}/result/markdown`,
         {
-          "accept": "application/json",
-          "Authorization": `Bearer ${llamaParseAPIKey}`,
+          accept: "application/json",
+          Authorization: `Bearer ${llamaParseAPIKey}`,
         },
         1,
         5000,
         false,
-        true
-      )
-      console.log(textRes.body)
-      return textRes.body.markdown
+        true,
+      );
+      console.log(textRes.body);
+      return textRes.body.markdown;
     }
   }
 }
