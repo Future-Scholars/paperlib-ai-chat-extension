@@ -31,7 +31,6 @@ export class ChatService {
     const id = `${this.paperEntity?._id}`;
     const conversationStore = useConversationStore();
     const cachedConversation = conversationStore.getConversation(id);
-    console.log("cachedConversation:", cachedConversation);
     if (
       cachedConversation?.embeddings &&
       cachedConversation.embeddingLangCode
@@ -41,6 +40,14 @@ export class ChatService {
       });
       this._embeddings = cachedConversation.embeddings;
       this.embeddingLangCode = cachedConversation.embeddingLangCode;
+
+      PLAPI.logService.info(
+        "Embeddings loaded from cache",
+        cachedConversation.embeddingLangCode,
+        false,
+        "AIChatExt"
+      );
+
       return;
     }
     const encodeResult = await this.initializeEncoder();
@@ -77,12 +84,15 @@ export class ChatService {
     const embeddings: { text: string; embedding: number[] }[] = [];
     let embeddingLangCode: string;
     // 2. Get the language of the paper.
-    const lang = franc(fulltext.slice(0, 200), { minLength: 10 });
-    if (lang === "und") {
-      embeddingLangCode = "eng";
-    } else {
-      embeddingLangCode = lang;
-    }
+    const lang = this.detectTextLang(fulltext).code;
+    PLAPI.logService.info(
+      `Detected language: ${lang}`,
+      fulltext.slice(0, 500),
+      false,
+      "AIChatExt"
+    );
+
+    embeddingLangCode = lang;
 
     this._embeddings = [];
     const words = fulltext.split(" ");
@@ -127,8 +137,6 @@ export class ChatService {
       throw new Error("Paper entity not loaded");
     }
 
-    const translatedText = await this.translateText(text);
-
     let model = (await PLExtAPI.extensionPreferenceService.get(
       "@future-scholars/paperlib-ai-chat-extension",
       "ai-model"
@@ -151,7 +159,7 @@ export class ChatService {
     }
 
     return await this._encoderService.retrieve(
-      translatedText,
+      text,
       this._embeddings,
       contextParagNum
     );
@@ -250,7 +258,8 @@ export class ChatService {
   }
 
   detectTextLang(text: string) {
-    const langCode = franc(text, { minLength: 10 });
+    let langCode = franc(text, { minLength: 10 });
+    langCode = (!langCode || langCode === "und") ? "eng" : langCode;
 
     return { code: langCode, name: langCodes[langCode] };
   }
@@ -314,7 +323,7 @@ export class ChatService {
       return translation;
     } catch (error) {
       PLAPI.logService.error(
-        "Failed to translate the question.",
+        `Failed to translate ${text} to ${target}.`,
         error as Error,
         true,
         "AIChatExt"

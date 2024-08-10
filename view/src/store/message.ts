@@ -1,3 +1,4 @@
+import { PLAPI } from "paperlib-api";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
@@ -79,6 +80,7 @@ export const useMessageStore = defineStore(MESSAGE_STORE_ID, () => {
       sender: MessageSender.System,
     });
     const lang = chatService.detectTextLang(msg.content);
+
     const translatedMsgContent = lang.code === chatService.embeddingLangCode ? msg.content : await chatService.translateText(msg.content, chatService.embeddingLangCode);
     const context = await chatService.retrieveContext(translatedMsgContent);
     const answer = await chatService.queryLLM(translatedMsgContent, context, lang.name);

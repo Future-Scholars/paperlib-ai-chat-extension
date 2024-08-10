@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@future-scholars/llms-api-service':
-        specifier: ^0.0.5
-        version: 0.0.5
+        specifier: ^0.0.6
+        version: 0.0.6
       '@future-scholars/vite-plugin-electron-renderer':
         specifier: ^0.14.3
         version: 0.14.3
@@ -296,8 +296,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@future-scholars/llms-api-service@0.0.5':
-    resolution: {integrity: sha512-o09pKrrf0jMgIKM/7IM2ZafP3NtDq/ktvLWBfPB3IWDRwfCrHQXLauF1Zhz4f00wbra5nLorJ/+ywDg988WRtA==}
+  '@future-scholars/llms-api-service@0.0.6':
+    resolution: {integrity: sha512-Y7EgHHRFdVojvMQandPRatDMhkn1bNEkuD+TDpfpbTR4dYhTKQwM/Cj/T0VS7w1tQQsHyFxaaD++gnK0JodbjQ==}
     engines: {node: '>=18.16.1'}
 
   '@future-scholars/vite-plugin-electron-renderer@0.14.3':
@@ -2679,7 +2679,7 @@ snapshots:
   '@esbuild/win32-x64@0.18.20':
     optional: true
 
-  '@future-scholars/llms-api-service@0.0.5': {}
+  '@future-scholars/llms-api-service@0.0.6': {}
 
   '@future-scholars/vite-plugin-electron-renderer@0.14.3':
     dependencies:
