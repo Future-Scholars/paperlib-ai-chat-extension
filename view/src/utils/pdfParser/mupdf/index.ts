@@ -1,29 +1,31 @@
 import fs from "fs";
 import { PdfParser } from "../parser.ts";
+import * as Comlink from "comlink";
+import { MupdfWorker } from "./mupdf.worker.ts";
 
 interface Block {
   type: string;
   lines: { text?: string }[];
 }
 
+const worker = new Worker(new URL("./mupdf.worker", import.meta.url), {
+  type: "module",
+});
+const mupdfWorker = Comlink.wrap<MupdfWorker>(worker);
+
 export class MupdfParser implements PdfParser {
   private url: string;
-  private document: mupdf.Document;
 
   constructor(url: string) {
     this.url = url;
-    this.document = mupdf.Document.openDocument(
-      fs.readFileSync(url),
-      "application/pdf",
-    );
   }
 
   pageCount(): number {
-    return this.document.countPages();
+    return 0;
   }
   pageContent(pageIndex: number): string {
-    const page = this.document.loadPage(pageIndex);
-    const structuredPage = JSON.parse(page.toStructuredText().asJSON()) as {
+    const pageJson = "{}";
+    const structuredPage = JSON.parse(pageJson) as {
       blocks: Block[];
     };
     return structuredPage.blocks

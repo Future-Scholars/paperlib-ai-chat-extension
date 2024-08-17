@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import * as Comlink from "comlink";
+import { Document } from "mupdf";
 
 export const MUPDF_LOADED = "MUPDF_LOADED";
 
@@ -7,7 +8,7 @@ const mupdfScript = "/assets/mupdf.js";
 
 export class MupdfWorker {
   private mupdf?: any;
-  private document?: any;
+  private document?: Document;
 
   constructor() {
     this.initializeMupdf();
