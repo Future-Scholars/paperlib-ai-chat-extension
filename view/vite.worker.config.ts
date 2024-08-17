@@ -17,6 +17,14 @@ export default defineConfig({
           "transformers",
           "worker.ts",
         ),
+        mupdfWorker: path.resolve(
+          __dirname,
+          "src",
+          "utils",
+          "pdfParser",
+          "mupdf",
+          "mupdf.worker.ts",
+        ),
       },
       output: {
         entryFileNames: `assets/[name].js`,
