@@ -33,6 +33,16 @@ export class MupdfWorker {
     return true;
   }
 
+  async pageCount() {
+    if (!this.mupdf || !this.document) throw new Error("Document not loaded");
+    return this.document.countPages();
+  }
+
+  async pageJson(pageIndex: number) {
+    if (!this.mupdf || !this.document) throw new Error("Document not loaded");
+    return this.document.loadPage(pageIndex).toStructuredText().asJSON();
+  }
+
   async renderPageAsImage(
     pageIndex: number = 0,
     scale: number = 1,

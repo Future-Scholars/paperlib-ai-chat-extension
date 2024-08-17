@@ -1,5 +1,6 @@
 export interface PdfParser {
-  pageCount(): number;
-  pageContent(pageIndex: number): string;
-  pageContents(): string[];
+  load(url: string): Promise<void>;
+  pageCount(): Promise<number>;
+  pageContent(pageIndex: number): Promise<string>;
+  pageContents(): Promise<string[]>;
 }

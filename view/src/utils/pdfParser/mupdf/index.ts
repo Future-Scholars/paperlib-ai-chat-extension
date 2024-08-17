@@ -14,17 +14,18 @@ const worker = new Worker(new URL("mupdfWorker.js", import.meta.url), {
 const mupdfWorker = Comlink.wrap<MupdfWorker>(worker);
 
 export class MupdfParser implements PdfParser {
-  private url: string;
+  constructor() {}
 
-  constructor(url: string) {
-    this.url = url;
+  async load(url: string) {
+    const pdfFile = await fs.promises.readFile(url);
+    await mupdfWorker.loadDocument(pdfFile);
   }
 
-  pageCount(): number {
-    return 0;
+  async pageCount(): Promise<number> {
+    return mupdfWorker.pageCount();
   }
-  pageContent(pageIndex: number): string {
-    const pageJson = "{}";
+  async pageContent(pageIndex: number): Promise<string> {
+    const pageJson = await mupdfWorker.pageJson(pageIndex);
     const structuredPage = JSON.parse(pageJson) as {
       blocks: Block[];
     };
@@ -40,7 +41,12 @@ export class MupdfParser implements PdfParser {
       .filter(Boolean)
       .join("\n");
   }
-  pageContents(): string[] {
-    return [];
+  async pageContents(): Promise<string[]> {
+    const len = await this.pageCount();
+    let contents: string[] = [];
+    for (let i = 0; i < len; i++) {
+      contents.push(await this.pageContent(i));
+    }
+    return contents;
   }
 }
