@@ -4,7 +4,10 @@ import { Document } from "mupdf";
 
 export const MUPDF_LOADED = "MUPDF_LOADED";
 
-const mupdfScript = "/assets/mupdf.js";
+const mupdfScript = self.location.href.replace(
+  "assets/mupdfWorker.js",
+  "assets/mupdf.js",
+);
 
 export class MupdfWorker {
   private mupdf?: any;

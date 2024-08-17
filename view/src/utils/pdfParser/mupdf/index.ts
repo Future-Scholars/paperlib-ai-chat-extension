@@ -8,7 +8,9 @@ interface Block {
   lines: { text?: string }[];
 }
 
-const worker = new Worker(new URL("mupdfWorker.js", import.meta.url), {
+const WORKER_FILE_PATH = "mupdfWorker.js";
+
+const worker = new Worker(new URL(WORKER_FILE_PATH, import.meta.url), {
   type: "module",
 });
 const mupdfWorker = Comlink.wrap<MupdfWorker>(worker);
