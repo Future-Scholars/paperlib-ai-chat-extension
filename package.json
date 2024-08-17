@@ -31,7 +31,6 @@
     "localforage": "^1.10.0",
     "mupdf": "^0.2.3",
     "paperlib-api": "^0.1.10",
-    "pdfjs-dist": "^4.0.269",
     "pinia": "^2.1.7",
     "prettier": "^3.1.1",
     "prettier-plugin-organize-imports": "^3.2.4",
