@@ -1,6 +1,39 @@
 import path from "node:path";
 import commonjs from "@rollup/plugin-commonjs";
 import { defineConfig } from "vite";
+import { resolve } from "path";
+import fs from "fs";
+
+function copyMupdfFiles() {
+  return {
+    name: "copy-mupdf-files",
+    writeBundle() {
+      const srcDir = resolve("node_modules/mupdf/dist");
+      const destDir = resolve("dist/assets");
+      const filesToCopy = [
+        "mupdf-wasm.js",
+        "mupdf-wasm.wasm",
+        "mupdf.js",
+        "tasks.js",
+      ];
+
+      if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir, { recursive: true });
+      }
+
+      filesToCopy.forEach((file) => {
+        const src = path.join(srcDir, file);
+        const dest = path.join(destDir, file);
+        if (fs.existsSync(src)) {
+          fs.copyFileSync(src, dest);
+          console.log(`Copied ${file} to ${destDir}`);
+        } else {
+          console.warn(`Warning: ${file} not found in ${srcDir}`);
+        }
+      });
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -50,5 +83,5 @@ export default defineConfig({
 
   resolve: {},
 
-  plugins: [commonjs()],
+  plugins: [commonjs(), copyMupdfFiles()],
 });
