@@ -3,10 +3,11 @@ import { franc } from "franc";
 import { PLAPI, PLExtAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
 
-import { getFullText } from "@/utils/pdfjs/utils";
+import { urlUtils } from "paperlib-api/utils";
 import { langCodes } from "@/utils/iso-639-3";
 import { EncoderService } from "./encoder-service";
 import { useConversationStore } from "@/store/conversation.ts";
+import { newPdfParser, PDF_PARSER_TYPE } from "@/utils/pdfParser";
 
 export class ChatService {
   paperEntity?: PaperEntity;
@@ -45,7 +46,7 @@ export class ChatService {
         "Embeddings loaded from cache",
         cachedConversation.embeddingLangCode,
         false,
-        "AIChatExt"
+        "AIChatExt",
       );
 
       return;
@@ -75,7 +76,7 @@ export class ChatService {
         "Failed to access the main URL of the paper entity.",
         this.paperEntity.mainURL,
         true,
-        "AIChatExt"
+        "AIChatExt",
       );
       return;
     }
@@ -89,7 +90,7 @@ export class ChatService {
       `Detected language: ${lang}`,
       fulltext.slice(0, 500),
       false,
-      "AIChatExt"
+      "AIChatExt",
     );
 
     embeddingLangCode = lang;
@@ -111,11 +112,11 @@ export class ChatService {
   async getFullText(url: string) {
     const useLLAMAParse = (await PLExtAPI.extensionPreferenceService.get(
       "@future-scholars/paperlib-ai-chat-extension",
-      "llama-parse"
+      "llama-parse",
     )) as boolean;
     const llamaParseAPIKey = (await PLExtAPI.extensionPreferenceService.get(
       "@future-scholars/paperlib-ai-chat-extension",
-      "llama-parse-api-key"
+      "llama-parse-api-key",
     )) as string;
 
     let text = "";
@@ -123,10 +124,12 @@ export class ChatService {
       text = await PLExtAPI.extensionManagementService.callExtensionMethod(
         "@future-scholars/paperlib-ai-chat-extension",
         "llamaParse",
-        url
+        url,
       );
     } else {
-      text = (await getFullText(url)).join("\n");
+      const pdfParser = await newPdfParser(PDF_PARSER_TYPE.MUPDF);
+      await pdfParser.load(urlUtils.eraseProtocol(url));
+      text = (await pdfParser.pageContents()).join("\n");
     }
 
     return text;
@@ -139,12 +142,12 @@ export class ChatService {
 
     let model = (await PLExtAPI.extensionPreferenceService.get(
       "@future-scholars/paperlib-ai-chat-extension",
-      "ai-model"
+      "ai-model",
     )) as string;
 
     const customModelCode = (await PLExtAPI.extensionPreferenceService.get(
       "@future-scholars/paperlib-ai-chat-extension",
-      "customModelCode"
+      "customModelCode",
     )) as string;
 
     if (customModelCode) {
@@ -161,19 +164,19 @@ export class ChatService {
     return await this._encoderService.retrieve(
       text,
       this._embeddings,
-      contextParagNum
+      contextParagNum,
     );
   }
 
   async llmConfig() {
     let model = (await PLExtAPI.extensionPreferenceService.get(
       "@future-scholars/paperlib-ai-chat-extension",
-      "ai-model"
+      "ai-model",
     )) as string;
 
     const customModelCode = (await PLExtAPI.extensionPreferenceService.get(
       "@future-scholars/paperlib-ai-chat-extension",
-      "customModelCode"
+      "customModelCode",
     )) as string;
 
     if (customModelCode) {
@@ -182,7 +185,7 @@ export class ChatService {
 
     const customAPIURL = (await PLExtAPI.extensionPreferenceService.get(
       "@future-scholars/paperlib-ai-chat-extension",
-      "customAPIURL"
+      "customAPIURL",
     )) as string;
 
     let apiKey = "";
@@ -191,22 +194,22 @@ export class ChatService {
     if (modelServiceProvider === "Gemini") {
       apiKey = (await PLExtAPI.extensionPreferenceService.get(
         "@future-scholars/paperlib-ai-chat-extension",
-        "gemini-api-key"
+        "gemini-api-key",
       )) as string;
     } else if (modelServiceProvider === "OpenAI") {
       apiKey = (await PLExtAPI.extensionPreferenceService.get(
         "@future-scholars/paperlib-ai-chat-extension",
-        "openai-api-key"
+        "openai-api-key",
       )) as string;
     } else if (modelServiceProvider === "Perplexity") {
       apiKey = (await PLExtAPI.extensionPreferenceService.get(
         "@future-scholars/paperlib-ai-chat-extension",
-        "perplexity-api-key"
+        "perplexity-api-key",
       )) as string;
     } else if (modelServiceProvider === "Zhipu") {
       apiKey = (await PLExtAPI.extensionPreferenceService.get(
         "@future-scholars/paperlib-ai-chat-extension",
-        "zhipu-api-key"
+        "zhipu-api-key",
       )) as string;
     }
 
@@ -220,7 +223,7 @@ export class ChatService {
 
     const answer = await LLMsAPI.model(model)
       .setSystemInstruction(
-        `You are a academic paper explainer, skilled in explaining content of a paper. You should answer the question in ${anwserLang}.`
+        `You are a academic paper explainer, skilled in explaining content of a paper. You should answer the question in ${anwserLang}.`,
       )
       .setAPIKey(apiKey)
       .setAPIURL(customAPIURL)
@@ -235,7 +238,7 @@ export class ChatService {
             0,
             300000,
             false,
-            true
+            true,
           )) as any;
 
           if (
@@ -247,7 +250,7 @@ export class ChatService {
             return response.body;
           }
         },
-        true
+        true,
       );
 
     // render markdown
@@ -259,7 +262,7 @@ export class ChatService {
 
   detectTextLang(text: string) {
     let langCode = franc(text, { minLength: 10 });
-    langCode = (!langCode || langCode === "und") ? "eng" : langCode;
+    langCode = !langCode || langCode === "und" ? "eng" : langCode;
 
     return { code: langCode, name: langCodes[langCode] };
   }
@@ -288,7 +291,7 @@ export class ChatService {
     try {
       const response = await LLMsAPI.model(model)
         .setSystemInstruction(
-          `You are a professional translator. Please just give me a JSON stringified string like {"translationResult": "..."} without any other content, which can be directly parsed by JSON.parse().`
+          `You are a professional translator. Please just give me a JSON stringified string like {"translationResult": "..."} without any other content, which can be directly parsed by JSON.parse().`,
         )
         .setAPIKey(apiKey)
         .setAPIURL(customAPIURL)
@@ -303,7 +306,7 @@ export class ChatService {
               0,
               300000,
               false,
-              true
+              true,
             )) as any;
 
             if (
@@ -315,7 +318,7 @@ export class ChatService {
               return response.body;
             }
           },
-          true
+          true,
         );
 
       const translation = LLMsAPI.parseJSON(response)
@@ -326,7 +329,7 @@ export class ChatService {
         `Failed to translate ${text} to ${target}.`,
         error as Error,
         true,
-        "AIChatExt"
+        "AIChatExt",
       );
       return text;
     }
