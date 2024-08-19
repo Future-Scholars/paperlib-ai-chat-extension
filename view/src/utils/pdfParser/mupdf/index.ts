@@ -44,14 +44,14 @@ export class MupdfParser implements PdfParser {
       .join("\n");
   }
   async pageContents(
-    onProgress: (progress: number) => void,
+    onProgress?: (progress: number) => void,
   ): Promise<string[]> {
     const len = await this.pageCount();
     let contents: string[] = [];
     for (let i = 0; i < len; i++) {
       contents.push(await this.pageContent(i));
       const progress = ((i + 1) / len) * 100;
-      onProgress(progress);
+      onProgress?.(progress);
     }
     return contents;
   }
