@@ -55,4 +55,8 @@ export class MupdfParser implements PdfParser {
     }
     return contents;
   }
+
+  async pageAsPng(pageIndex: number) {
+    return mupdfWorker.renderPageAsImage(pageIndex);
+  }
 }
