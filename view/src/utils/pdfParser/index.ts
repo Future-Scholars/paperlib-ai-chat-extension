@@ -1,4 +1,5 @@
-import { MupdfParser } from "@/utils/pdfParser/mupdf";
+import { MupdfParser } from "./mupdf";
+import { LlamaParser } from "./llama.ts";
 
 export enum PDF_PARSER_TYPE {
   LLM_PARSER,
@@ -9,5 +10,5 @@ export async function newPdfParser(type: PDF_PARSER_TYPE) {
     return new MupdfParser();
   }
 
-  return new MupdfParser();
+  return new LlamaParser();
 }
