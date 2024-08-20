@@ -1,11 +1,12 @@
 import { MupdfParser } from "./mupdf";
 import { LlamaParser } from "./llama.ts";
+import { PdfParser } from "./parser.ts";
 
 export enum PDF_PARSER_TYPE {
   LLM_PARSER,
   MUPDF,
 }
-export async function newPdfParser(type: PDF_PARSER_TYPE) {
+export function newPdfParser(type: PDF_PARSER_TYPE): PdfParser {
   if (type === PDF_PARSER_TYPE.MUPDF) {
     return new MupdfParser();
   }
