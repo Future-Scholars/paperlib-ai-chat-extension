@@ -1,5 +1,6 @@
 import { PdfParser } from "./parser.ts";
 import { MupdfParser } from "./mupdf";
+import { PLExtAPI } from "paperlib-api/api";
 
 export class LlamaParser implements PdfParser {
   private mupdf: MupdfParser;
@@ -14,7 +15,12 @@ export class LlamaParser implements PdfParser {
     return this.mupdf.pageCount();
   }
   async pageContent(pageIndex: number) {
-    return "";
+    const pageContent = await this.mupdf.pageAsPng(pageIndex);
+    return (await PLExtAPI.extensionManagementService.callExtensionMethod(
+      "@future-scholars/paperlib-ai-chat-extension",
+      "llamaParse",
+      pageContent,
+    )) as string;
   }
 
   async pageContents(onProgress?: (progress: number) => void) {

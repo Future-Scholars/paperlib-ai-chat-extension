@@ -1,9 +1,7 @@
-import { createReadStream } from "fs";
 import { PLAPI, PLExtAPI, PLExtension, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
-import { processId, urlUtils } from "paperlib-api/utils";
+import { processId } from "paperlib-api/utils";
 import path from "path";
-import { blob } from "stream/consumers";
 
 const extID = "@future-scholars/paperlib-ai-chat-extension";
 
@@ -307,17 +305,16 @@ class PaperlibAIChatExtension extends PLExtension {
     this._createChatWindow(selectedPaperEntity);
   }
 
-  private async llamaParse(url: string) {
+  private async llamaParse(content: Uint8Array) {
     const llamaParseAPIKey = (await PLExtAPI.extensionPreferenceService.get(
       "@future-scholars/paperlib-ai-chat-extension",
       "llama-parse-api-key",
     )) as string;
 
-    const fileBlob = await blob(createReadStream(urlUtils.eraseProtocol(url)));
     const results = await PLExtAPI.networkTool.postForm(
       "https://api.cloud.llamaindex.ai/api/parsing/upload",
       {
-        file: fileBlob,
+        file: new Blob([content]),
       } as any,
       {
         accept: "application/json",
