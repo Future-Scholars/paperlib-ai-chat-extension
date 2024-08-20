@@ -22,8 +22,4 @@ export class LlamaParser implements PdfParser {
       pageContent,
     )) as string;
   }
-
-  async pageContents(onProgress?: (progress: number) => void) {
-    return [""];
-  }
 }
