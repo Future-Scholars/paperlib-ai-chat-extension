@@ -20,8 +20,12 @@ export default class PaperService {
     this.pdfParser = newPdfParser(pdfParserType);
   }
 
-  async parsePdf(onProgress?: (progress: number) => void): Promise<string[]> {
+  async parsePdf(
+    url: string,
+    onProgress?: (progress: number) => void,
+  ): Promise<string[]> {
     if (!this.pdfParser) throw new Error("Paper service not init");
+    await this.pdfParser.load(url);
     const len = await this.pdfParser.pageCount();
     let contents: string[] = [];
     for (let i = 0; i < len; i++) {
