@@ -63,8 +63,8 @@ export default class PaperService {
     for (let p = 0; p < paragraphs.length; p++) {
       const embedding = await this.encoderService.encode(paragraphs[p]);
       embeddings.push({ text: paragraphs[p], embedding });
-      onProgress?.(50 + ((p + 1) / paragraphs.length) * 100);
+      onProgress?.(50 + ((p + 1) / paragraphs.length) * 50);
     }
-    return embeddings;
+    return { embeddings, fulltext };
   }
 }

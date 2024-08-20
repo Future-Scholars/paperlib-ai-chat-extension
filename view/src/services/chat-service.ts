@@ -7,7 +7,7 @@ import { urlUtils } from "paperlib-api/utils";
 import { langCodes } from "@/utils/iso-639-3";
 import { EncoderService } from "./encoder-service";
 import { useConversationStore } from "@/store/conversation.ts";
-import { newPdfParser, PDF_PARSER_TYPE } from "@/utils/pdfParser";
+import PaperService from "./paper-service.ts";
 
 export class ChatService {
   paperEntity?: PaperEntity;
@@ -15,6 +15,7 @@ export class ChatService {
   embeddingLangCode = "eng";
 
   private readonly _encoderService: EncoderService;
+  private readonly paperService = new PaperService();
 
   constructor() {
     this._encoderService = new EncoderService();
@@ -69,6 +70,8 @@ export class ChatService {
       throw new Error("Paper entity not loaded");
     }
 
+    await this.paperService.init();
+
     // 1. Load fulltext of the paper.
     const url = await PLAPI.fileService.access(this.paperEntity.mainURL, false);
     if (!url) {
@@ -80,9 +83,11 @@ export class ChatService {
       );
       return;
     }
-    const fulltext = await this.getFullText(url);
 
-    const embeddings: { text: string; embedding: number[] }[] = [];
+    this._embeddings = [];
+    const { embeddings, fulltext } = await this.paperService.encode(
+      urlUtils.eraseProtocol(url),
+    );
     let embeddingLangCode: string;
     // 2. Get the language of the paper.
     const lang = this.detectTextLang(fulltext).code;
@@ -95,44 +100,7 @@ export class ChatService {
 
     embeddingLangCode = lang;
 
-    this._embeddings = [];
-    const words = fulltext.split(" ");
-    const paragraphs: string[] = [];
-    for (let i = 0; i < words.length; i += 256) {
-      paragraphs.push(words.slice(i, i + 256).join(" "));
-    }
-
-    for (const paragraph of paragraphs) {
-      const embedding = await this._encoderService.encode(paragraph);
-      embeddings.push({ text: paragraph, embedding });
-    }
     return { embeddingLangCode, embeddings };
-  }
-
-  async getFullText(url: string) {
-    const useLLAMAParse = (await PLExtAPI.extensionPreferenceService.get(
-      "@future-scholars/paperlib-ai-chat-extension",
-      "llama-parse",
-    )) as boolean;
-    const llamaParseAPIKey = (await PLExtAPI.extensionPreferenceService.get(
-      "@future-scholars/paperlib-ai-chat-extension",
-      "llama-parse-api-key",
-    )) as string;
-
-    let text = "";
-    if (useLLAMAParse && llamaParseAPIKey) {
-      text = await PLExtAPI.extensionManagementService.callExtensionMethod(
-        "@future-scholars/paperlib-ai-chat-extension",
-        "llamaParse",
-        url,
-      );
-    } else {
-      const pdfParser = await newPdfParser(PDF_PARSER_TYPE.MUPDF);
-      await pdfParser.load(urlUtils.eraseProtocol(url));
-      text = (await pdfParser.pageContents()).join("\n");
-    }
-
-    return text;
   }
 
   async retrieveContext(text: string) {
