@@ -12,6 +12,9 @@ export default class PaperService {
   }
 
   async init() {
+    if (this.pdfParser) {
+      return;
+    }
     const useLLAMAParse = (await PLExtAPI.extensionPreferenceService.get(
       "@future-scholars/paperlib-ai-chat-extension",
       "llama-parse",
