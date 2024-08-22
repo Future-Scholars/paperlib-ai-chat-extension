@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 import * as Comlink from "comlink";
-import { Document } from "mupdf";
+import { Document, Buffer, PDFDocument } from "mupdf";
 
 export const MUPDF_LOADED = "MUPDF_LOADED";
 
@@ -44,6 +44,21 @@ export class MupdfWorker {
   async pageJson(pageIndex: number) {
     if (!this.mupdf || !this.document) throw new Error("Document not loaded");
     return this.document.loadPage(pageIndex).toStructuredText().asJSON();
+  }
+
+  async extractPages(pageIndexes: number[]) {
+    if (!this.mupdf || !this.document) throw new Error("Document not loaded");
+    const tempDocument = new this.mupdf.PDFDocument() as PDFDocument;
+    pageIndexes.forEach((pageIndex) => {
+      tempDocument.graftPage(
+        pageIndex,
+        this.document as PDFDocument,
+        pageIndex,
+      );
+    });
+    const documentBuf = tempDocument.saveToBuffer() as Buffer;
+    tempDocument.destroy();
+    return documentBuf.asUint8Array();
   }
 
   async renderPageAsImage(
