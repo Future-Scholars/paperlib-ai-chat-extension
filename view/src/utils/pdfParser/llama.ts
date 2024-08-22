@@ -15,7 +15,7 @@ export class LlamaParser implements PdfParser {
     return this.mupdf.pageCount();
   }
   async pageContent(pageIndex: number) {
-    const pageContent = await this.mupdf.pageAsPng(pageIndex);
+    const pageContent = await this.mupdf.extractPages([pageIndex]);
     return (await PLExtAPI.extensionManagementService.callExtensionMethod(
       "@future-scholars/paperlib-ai-chat-extension",
       "llamaParse",
