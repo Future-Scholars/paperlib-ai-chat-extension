@@ -50,11 +50,7 @@ export class MupdfWorker {
     if (!this.mupdf || !this.document) throw new Error("Document not loaded");
     const tempDocument = new this.mupdf.PDFDocument() as PDFDocument;
     pageIndexes.forEach((pageIndex) => {
-      tempDocument.graftPage(
-        pageIndex,
-        this.document as PDFDocument,
-        tempDocument.countPages(),
-      );
+      tempDocument.graftPage(-1, this.document as PDFDocument, pageIndex);
     });
     const documentBuf = tempDocument.saveToBuffer() as Buffer;
     tempDocument.destroy();
