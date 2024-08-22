@@ -53,7 +53,7 @@ export class MupdfWorker {
       tempDocument.graftPage(
         pageIndex,
         this.document as PDFDocument,
-        pageIndex,
+        tempDocument.countPages(),
       );
     });
     const documentBuf = tempDocument.saveToBuffer() as Buffer;
