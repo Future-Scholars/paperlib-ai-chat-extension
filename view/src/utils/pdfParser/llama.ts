@@ -19,7 +19,7 @@ export class LlamaParser implements PdfParser {
     return (await PLExtAPI.extensionManagementService.callExtensionMethod(
       "@future-scholars/paperlib-ai-chat-extension",
       "llamaParse",
-      pageContent,
+      Array.from(pageContent.values()),
     )) as string;
   }
 }
