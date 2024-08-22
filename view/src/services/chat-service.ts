@@ -29,7 +29,7 @@ export class ChatService {
     this.paperEntity = paperEntity;
   }
 
-  async initializeEncoderWithCache() {
+  async initializeEncoderWithCache(onProgress?: (progress: number) => void) {
     const id = `${this.paperEntity?._id}`;
     const conversationStore = useConversationStore();
     const cachedConversation = conversationStore.getConversation(id);
@@ -52,7 +52,7 @@ export class ChatService {
 
       return;
     }
-    const encodeResult = await this.initializeEncoder();
+    const encodeResult = await this.initializeEncoder(onProgress);
     if (encodeResult) {
       const { embeddings, embeddingLangCode } = encodeResult;
       conversationStore.setConversation({
@@ -65,7 +65,7 @@ export class ChatService {
     }
   }
 
-  async initializeEncoder() {
+  async initializeEncoder(onProgress?: (progress: number) => void) {
     if (!this.paperEntity) {
       throw new Error("Paper entity not loaded");
     }
@@ -87,6 +87,7 @@ export class ChatService {
     this._embeddings = [];
     const { embeddings, fulltext } = await this.paperService.encode(
       urlUtils.eraseProtocol(url),
+      onProgress,
     );
     let embeddingLangCode: string;
     // 2. Get the language of the paper.

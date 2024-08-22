@@ -73,6 +73,10 @@ function cleanFakedMessage(conversationId) {
   });
 }
 
+function getLoadingMsgContent(progress: number) {
+  return `I'm loading this paper(${progress.toFixed(0)}%). It may take a few seconds to several minutes to embed the paper's content...`;
+}
+
 const loadPaperText = async () => {
   ready.value = false;
   const selectedPaperEntities = (await PLAPI.uiStateService.getState(
@@ -90,15 +94,19 @@ const loadPaperText = async () => {
   const loadingMessage = messageStore.sendMessage({
     fake: true,
     conversationId: curConversationId.value,
-    content:
-      "I'm loading this paper... It may take a few seconds to several minutes to embed the paper's content...",
+    content: getLoadingMsgContent(0),
     sender: MessageSender.System,
   });
 
   if (paperEntity) {
     curPaperEntity.value = paperEntity;
     await chatService.loadPaperEntity(paperEntity);
-    await chatService.initializeEncoderWithCache();
+    await chatService.initializeEncoderWithCache((progress) => {
+      messageStore.updateMessage({
+        ...loadingMessage,
+        content: getLoadingMsgContent(progress),
+      });
+    });
     ready.value = true;
     messageStore.updateMessage({
       ...loadingMessage,
