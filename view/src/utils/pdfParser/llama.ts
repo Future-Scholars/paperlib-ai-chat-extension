@@ -5,7 +5,7 @@ import axios from "axios";
 
 export class LlamaParser implements PdfParser {
   private mupdf: MupdfParser;
-  private apiKey?:string
+  private apiKey?: string;
 
   constructor() {
     this.mupdf = new MupdfParser();
@@ -16,26 +16,25 @@ export class LlamaParser implements PdfParser {
   pageCount() {
     return this.mupdf.pageCount();
   }
-  async llamaParse(content:Uint8Array){
-    if (!this.apiKey){
+  async llamaParse(content: Uint8Array) {
+    if (!this.apiKey) {
       this.apiKey = (await PLExtAPI.extensionPreferenceService.get(
-          "@future-scholars/paperlib-ai-chat-extension",
-          "llama-parse-api-key",
+        "@future-scholars/paperlib-ai-chat-extension",
+        "llama-parse-api-key",
       )) as string;
     }
 
-
     const formData = new FormData();
 
-    formData.append("file",new Blob([content]))
+    formData.append("file", new Blob([content]));
 
-    const url= "https://api.cloud.llamaindex.ai/api/parsing/upload"
+    const url = "https://api.cloud.llamaindex.ai/api/parsing/upload";
 
     const results = await axios.post(url, formData, {
       headers: {
-        'accept': 'application/json',
-        'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${this.apiKey}`,
+        accept: "application/json",
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${this.apiKey}`,
       },
     });
   }
