@@ -10,6 +10,7 @@ import {
   useConversationStore,
 } from "@/store/conversation.ts";
 import { onMounted, ref } from "vue";
+import { PLExtAPI } from "paperlib-api/api";
 
 const MAX_CONVERSATION_NUM = 5;
 
@@ -90,6 +91,16 @@ export function usePersistState() {
 
   onMounted(async () => {
     try {
+      const disableCache = (await PLExtAPI.extensionPreferenceService.get(
+        "@future-scholars/paperlib-ai-chat-extension",
+        "disable-cache",
+      )) as boolean;
+
+      if (disableCache) {
+        await resetCache();
+        return;
+      }
+
       await persistMessage();
       await persistConversation();
     } finally {
