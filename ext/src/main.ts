@@ -1,4 +1,3 @@
-import * as buffer from "buffer";
 import { PLAPI, PLExtAPI, PLExtension, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
 import { processId } from "paperlib-api/utils";
@@ -304,67 +303,6 @@ class PaperlibAIChatExtension extends PLExtension {
     );
 
     this._createChatWindow(selectedPaperEntity);
-  }
-
-  private async llamaParse(content: number[]) {
-    const llamaParseAPIKey = (await PLExtAPI.extensionPreferenceService.get(
-      "@future-scholars/paperlib-ai-chat-extension",
-      "llama-parse-api-key",
-    )) as string;
-
-    const results = await PLExtAPI.networkTool.postForm(
-      "https://api.cloud.llamaindex.ai/api/parsing/upload",
-      {
-        file: new buffer.Blob([Uint8Array.from(content)]),
-      } as any,
-      {
-        accept: "application/json",
-        Authorization: `Bearer ${llamaParseAPIKey}`,
-      },
-      1,
-      240000,
-      true,
-    );
-    const id = results.body.id;
-
-    // Wait for the parsing to finish, check every 5 seconds
-    let status = "PENDING";
-    while (status === "PENDING") {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      const statusRes = await PLExtAPI.networkTool.get(
-        `https://api.cloud.llamaindex.ai/api/parsing/job/${id}`,
-        {
-          accept: "application/json",
-          Authorization: `Bearer ${llamaParseAPIKey}`,
-        },
-        1,
-        5000,
-        false,
-        true,
-      );
-      status = statusRes.body.status;
-    }
-
-    if (status === "ERROR") {
-      throw new Error("Llama Parse failed");
-    }
-
-    if (status === "SUCCESS") {
-      console.log("Parsing successful");
-      const textRes = await PLExtAPI.networkTool.get(
-        `https://api.cloud.llamaindex.ai/api/parsing/job/${id}/result/markdown`,
-        {
-          accept: "application/json",
-          Authorization: `Bearer ${llamaParseAPIKey}`,
-        },
-        1,
-        5000,
-        false,
-        true,
-      );
-      console.log(textRes.body);
-      return textRes.body.markdown;
-    }
   }
 }
 
