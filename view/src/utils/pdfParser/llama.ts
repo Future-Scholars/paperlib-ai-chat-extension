@@ -43,7 +43,7 @@ export class LlamaParser implements PdfParser {
     // Wait for the parsing to finish, check every 1 seconds
     let status = "PENDING";
     while (status === "PENDING") {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       const statusRes = await axios.get(
         `https://api.cloud.llamaindex.ai/api/parsing/job/${id}`,
         {
