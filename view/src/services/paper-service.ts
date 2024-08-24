@@ -35,15 +35,7 @@ export default class PaperService {
     onProgress?: (progress: number) => void,
   ): Promise<string[]> {
     if (!this.pdfParser) throw new Error("Paper service not init");
-    await this.pdfParser.load(url);
-    const len = await this.pdfParser.pageCount();
-    let contents: string[] = [];
-    for (let i = 0; i < len; i++) {
-      contents.push(await this.pdfParser.pageContent(i));
-      const progress = ((i + 1) / len) * 100;
-      onProgress?.(progress);
-    }
-    return contents;
+    return this.pdfParser.parse(url, onProgress);
   }
 
   async encode(url: string, onProgress?: (progress: number) => void) {
