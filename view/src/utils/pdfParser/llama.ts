@@ -81,8 +81,13 @@ export class LlamaParser implements PdfParser {
     return (await this.llamaParse(pageContent)) as string;
   }
 
+  async pageContents(pageIndexes: number[]) {
+    const pageContent = await this.mupdf.extractPages(pageIndexes);
+    return (await this.llamaParse(pageContent)) as string;
+  }
+
   async parse(url: string, onProgress?: (progress: number) => void) {
-    await this.mupdf.load(url);
+    await this.load(url);
     let step = 2;
     const len = await this.pageCount();
     const maxStep = Math.ceil(len / 3);
@@ -90,12 +95,12 @@ export class LlamaParser implements PdfParser {
       step = maxStep;
     }
     let contents: string[] = [];
-    const allPageIndexes = Array.from({ len }, (_, index) => index);
+    const allPageIndexes = Array.from({ length: len }, (_, index) => index);
     for (let i = 0; i < len; i += step) {
       const pageIndexes = allPageIndexes.slice(i, i + step);
-      const pageContents = await this.mupdf.extractPages(pageIndexes);
+      const pageContents = await this.pageContents(pageIndexes);
       contents.push(pageContents);
-      const progress = ((i + 1) / len) * 100;
+      const progress = ((i + step) / len) * 100;
       onProgress?.(progress);
     }
     return contents;
