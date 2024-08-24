@@ -33,6 +33,14 @@ class PaperlibAIChatExtension extends PLExtension {
           value: "",
           order: 0,
         },
+        "disable-cache": {
+          type: "boolean",
+          name: "Disable Cache",
+          description:
+            "Remove all cached messages and papers. Use this with caution.",
+          value: false,
+          order: 1,
+        },
         "ai-model": {
           type: "options",
           name: "LLM Model",
