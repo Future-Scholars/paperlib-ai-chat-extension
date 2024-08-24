@@ -26,6 +26,10 @@ export function usePersistState() {
   const conversationStore = useConversationStore();
   const loading = ref(true);
 
+  async function resetCache() {
+    return localForage.clear();
+  }
+
   async function persistMessage() {
     const storedMessage =
       await localForage.getItem<MessageState>(MESSAGE_PERSIST_ID);
