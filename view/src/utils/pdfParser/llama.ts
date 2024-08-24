@@ -98,7 +98,7 @@ export class LlamaParser implements PdfParser {
     const allPageIndexes = Array.from({ length: len }, (_, index) => index);
     for (let i = 0; i < len; i += step) {
       if (i === 0) {
-        onProgress?.(5);
+        onProgress?.(10);
       }
       const pageIndexes = allPageIndexes.slice(i, i + step);
       const pageContents = await this.pageContents(pageIndexes);
