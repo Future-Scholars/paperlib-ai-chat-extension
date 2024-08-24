@@ -37,6 +37,43 @@ export class LlamaParser implements PdfParser {
         Authorization: `Bearer ${this.apiKey}`,
       },
     });
+
+    const id = results.data.id;
+
+    // Wait for the parsing to finish, check every 1 seconds
+    let status = "PENDING";
+    while (status === "PENDING") {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const statusRes = await axios.get(
+        `https://api.cloud.llamaindex.ai/api/parsing/job/${id}`,
+        {
+          headers: {
+            accept: "application/json",
+            Authorization: `Bearer ${this.apiKey}`,
+          },
+        },
+      );
+      status = statusRes.status;
+    }
+
+    if (status === "ERROR") {
+      throw new Error("Llama Parse failed");
+    }
+
+    if (status === "SUCCESS") {
+      console.log("Parsing successful");
+      const textRes = await axios.get(
+        `https://api.cloud.llamaindex.ai/api/parsing/job/${id}/result/markdown`,
+        {
+          headers: {
+            accept: "application/json",
+            Authorization: `Bearer ${this.apiKey}`,
+          },
+        },
+      );
+      console.log(textRes.data);
+      return textRes.data.markdown;
+    }
   }
 
   async pageContent(pageIndex: number) {
