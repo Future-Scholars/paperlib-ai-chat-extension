@@ -78,6 +78,9 @@ function getLoadingMsgContent(progress: number) {
 }
 
 const loadPaperText = async () => {
+  if (!ready.value) {
+    return;
+  }
   ready.value = false;
   const selectedPaperEntities = (await PLAPI.uiStateService.getState(
     "selectedPaperEntities",
