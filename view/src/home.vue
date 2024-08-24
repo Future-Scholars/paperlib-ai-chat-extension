@@ -77,10 +77,14 @@ function getLoadingMsgContent(progress: number) {
   return `I'm loading this paper(${progress.toFixed(0)}%). It may take a few seconds to several minutes to embed the paper's content...`;
 }
 
-const loadPaperText = async () => {
+function onPaperChange() {
   if (!ready.value) {
     return;
   }
+  loadPaperText();
+}
+
+const loadPaperText = async () => {
   ready.value = false;
   const selectedPaperEntities = (await PLAPI.uiStateService.getState(
     "selectedPaperEntities",
@@ -144,7 +148,7 @@ const sendMessage = async (event: KeyboardEvent) => {
 };
 
 disposable(
-  PLAPI.uiStateService.onChanged(["selectedPaperEntities"], loadPaperText),
+  PLAPI.uiStateService.onChanged(["selectedPaperEntities"], onPaperChange),
 );
 
 onMounted(() => {
