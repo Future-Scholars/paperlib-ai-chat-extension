@@ -53,7 +53,7 @@ export class LlamaParser implements PdfParser {
           },
         },
       );
-      status = statusRes.status;
+      status = statusRes.data.status;
     }
 
     if (status === "ERROR") {
