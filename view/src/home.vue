@@ -99,20 +99,27 @@ const loadPaperText = async () => {
   });
 
   if (paperEntity) {
-    curPaperEntity.value = paperEntity;
-    await chatService.loadPaperEntity(paperEntity);
-    await chatService.initializeEncoderWithCache((progress) => {
+    try {
+      curPaperEntity.value = paperEntity;
+      await chatService.loadPaperEntity(paperEntity);
+      await chatService.initializeEncoderWithCache((progress) => {
+        messageStore.updateMessage({
+          ...loadingMessage,
+          content: getLoadingMsgContent(progress),
+        });
+      });
+      ready.value = true;
       messageStore.updateMessage({
         ...loadingMessage,
-        content: getLoadingMsgContent(progress),
+        content:
+          "The paper has been loaded successfully! You can start asking questions now.",
       });
-    });
-    ready.value = true;
-    messageStore.updateMessage({
-      ...loadingMessage,
-      content:
-        "The paper has been loaded successfully! You can start asking questions now.",
-    });
+    } catch (e) {
+      messageStore.updateMessage({
+        ...loadingMessage,
+        content: "Failed to load the paper.",
+      });
+    }
   }
 };
 
