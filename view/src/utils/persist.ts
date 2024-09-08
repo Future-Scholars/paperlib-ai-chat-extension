@@ -93,12 +93,15 @@ export function usePersistState() {
     try {
       const disableCache = (await PLExtAPI.extensionPreferenceService.get(
         "@future-scholars/paperlib-ai-chat-extension",
-        "disable-cache",
+        "reset-cache",
       )) as boolean;
 
       if (disableCache) {
         await resetCache();
-        return;
+        PLExtAPI.extensionPreferenceService.set(
+          "@future-scholars/paperlib-ai-chat-extension",
+          { "reset-cache": false },
+        );
       }
 
       await persistMessage();

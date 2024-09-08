@@ -33,9 +33,9 @@ class PaperlibAIChatExtension extends PLExtension {
           value: "",
           order: 0,
         },
-        "disable-cache": {
-          type: "boolean",
-          name: "Disable Cache",
+        "reset-cache": {
+          type: "button",
+          name: "Clear Cache",
           description:
             "Remove all cached messages and papers. Use this with caution.",
           value: false,
