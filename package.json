@@ -30,7 +30,7 @@
     "cssnano": "^6.0.2",
     "franc": "^6.2.0",
     "localforage": "^1.10.0",
-    "mupdf": "^0.2.3",
+    "mupdf": "^0.3.0",
     "paperlib-api": "^0.1.10",
     "pinia": "^2.1.7",
     "prettier": "^3.1.1",
