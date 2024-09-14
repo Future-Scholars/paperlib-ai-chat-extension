@@ -9,6 +9,8 @@ const windowID = "paperlib-ai-chat-extension-window";
 
 const openChatMenuItemId = "open-ai-chat";
 
+const RESET_CACHE_KEY = "reset-cache";
+
 class PaperlibAIChatExtension extends PLExtension {
   disposeCallbacks: (() => void)[];
   private parentWindowHeaderHeight = 36;
@@ -33,12 +35,13 @@ class PaperlibAIChatExtension extends PLExtension {
           value: "",
           order: 0,
         },
-        "reset-cache": {
+        [RESET_CACHE_KEY]: {
           type: "button",
           name: "Clear Cache",
           description:
             "Remove all cached messages and papers. Use this with caution.",
           value: false,
+          btnLabel: "Clear",
           order: 1,
         },
         "ai-model": {
@@ -195,6 +198,17 @@ class PaperlibAIChatExtension extends PLExtension {
           const { extID, itemID } = value.value;
           if (extID === this.id && itemID === openChatMenuItemId) {
             this._startChat();
+          }
+        },
+      ),
+    );
+    this.disposeCallbacks.push(
+      PLExtAPI.extensionPreferenceService.on(
+        `${this.id}:${RESET_CACHE_KEY}`,
+        (event) => {
+          const value = event.value.value;
+          if (value) {
+            PLAPI.logService.info(extID, `Clear cache successfully!`, true);
           }
         },
       ),

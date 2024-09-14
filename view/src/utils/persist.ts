@@ -14,6 +14,10 @@ import { PLExtAPI } from "paperlib-api/api";
 
 const MAX_CONVERSATION_NUM = 5;
 
+const EXT_ID = "@future-scholars/paperlib-ai-chat-extension";
+
+const RESET_CACHE_KEY = "reset-cache";
+
 localForage.config({
   driver: [localForage.INDEXEDDB],
   name: "ai-chat-extension",
@@ -28,7 +32,12 @@ export function usePersistState() {
   const loading = ref(true);
 
   async function resetCache() {
-    return localForage.clear();
+    messageStore.$reset();
+    conversationStore.$reset();
+    await localForage.clear();
+    PLExtAPI.extensionPreferenceService.set(EXT_ID, {
+      [RESET_CACHE_KEY]: false,
+    });
   }
 
   async function persistMessage() {
@@ -91,17 +100,23 @@ export function usePersistState() {
 
   onMounted(async () => {
     try {
+      PLExtAPI.extensionPreferenceService.on(
+        `${EXT_ID}:${RESET_CACHE_KEY}`,
+        (event) => {
+          const value = event.value.value;
+          if (value) {
+            resetCache();
+          }
+        },
+      );
+
       const disableCache = (await PLExtAPI.extensionPreferenceService.get(
-        "@future-scholars/paperlib-ai-chat-extension",
-        "reset-cache",
+        EXT_ID,
+        RESET_CACHE_KEY,
       )) as boolean;
 
       if (disableCache) {
         await resetCache();
-        PLExtAPI.extensionPreferenceService.set(
-          "@future-scholars/paperlib-ai-chat-extension",
-          { "reset-cache": false },
-        );
       }
 
       await persistMessage();

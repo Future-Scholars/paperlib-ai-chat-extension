@@ -31,6 +31,10 @@ export interface MessageState {
 export const useMessageStore = defineStore(MESSAGE_STORE_ID, () => {
   const entity = ref<MessageState["entity"]>({});
 
+  function $reset() {
+    entity.value = {};
+  }
+
   const getConvMessages = computed(() => {
     return (conversationId: string) => {
       const rawMessages = Object.values(entity.value).filter(
@@ -116,5 +120,6 @@ export const useMessageStore = defineStore(MESSAGE_STORE_ID, () => {
     updateMessage,
     sendMessage,
     sendLLMMessage,
+    $reset,
   };
 });
