@@ -17,6 +17,10 @@ export interface ConversationState {
 export const useConversationStore = defineStore(CONVERSATION_STORE_ID, () => {
   const entity = ref<ConversationState["entity"]>({});
 
+  function $reset() {
+    entity.value = {};
+  }
+
   const getConversation = computed(() => {
     return (id: string) => entity.value[id] as undefined | ConversationItem;
   });
@@ -43,5 +47,11 @@ export const useConversationStore = defineStore(CONVERSATION_STORE_ID, () => {
     }
   };
 
-  return { entity, setConversation, updateConversation, getConversation };
+  return {
+    entity,
+    setConversation,
+    updateConversation,
+    getConversation,
+    $reset,
+  };
 });
