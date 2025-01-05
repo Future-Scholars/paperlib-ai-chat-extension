@@ -1,4 +1,4 @@
-import { FeatureExtractionPipeline } from "@xenova/transformers";
+import { FeatureExtractionPipeline } from "@huggingface/transformers";
 import similarity from "compute-cosine-similarity";
 
 // Initialise worker
@@ -15,7 +15,7 @@ worker.onerror = (event: ErrorEvent) => {
 export class EncoderService {
   extractor?: FeatureExtractionPipeline;
 
-  constructor() { }
+  constructor() {}
 
   encode(text: string): Promise<number[]> {
     worker.postMessage({ text, task: "feature-extraction" });

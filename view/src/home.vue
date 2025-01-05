@@ -73,6 +73,17 @@ function cleanFakedMessage(conversationId) {
   });
 }
 
+function getLoadingMsgContent(progress: number) {
+  return `I'm loading this paper(${progress.toFixed(0)}%). It may take a few seconds to several minutes to embed the paper's content...`;
+}
+
+function onPaperChange() {
+  if (!ready.value) {
+    return;
+  }
+  loadPaperText();
+}
+
 const loadPaperText = async () => {
   ready.value = false;
   const selectedPaperEntities = (await PLAPI.uiStateService.getState(
@@ -90,21 +101,32 @@ const loadPaperText = async () => {
   const loadingMessage = messageStore.sendMessage({
     fake: true,
     conversationId: curConversationId.value,
-    content:
-      "I'm loading this paper... It may take a few seconds to several minutes to embed the paper's content...",
+    content: getLoadingMsgContent(0),
     sender: MessageSender.System,
   });
 
   if (paperEntity) {
-    curPaperEntity.value = paperEntity;
-    await chatService.loadPaperEntity(paperEntity);
-    await chatService.initializeEncoderWithCache();
-    ready.value = true;
-    messageStore.updateMessage({
-      ...loadingMessage,
-      content:
-        "The paper has been loaded successfully! You can start asking questions now.",
-    });
+    try {
+      curPaperEntity.value = paperEntity;
+      await chatService.loadPaperEntity(paperEntity);
+      await chatService.initializeEncoderWithCache((progress) => {
+        messageStore.updateMessage({
+          ...loadingMessage,
+          content: getLoadingMsgContent(progress),
+        });
+      });
+      ready.value = true;
+      messageStore.updateMessage({
+        ...loadingMessage,
+        content:
+          "The paper has been loaded successfully! You can start asking questions now.",
+      });
+    } catch (e) {
+      messageStore.updateMessage({
+        ...loadingMessage,
+        content: "Failed to load the paper.",
+      });
+    }
   }
 };
 
@@ -126,7 +148,7 @@ const sendMessage = async (event: KeyboardEvent) => {
 };
 
 disposable(
-  PLAPI.uiStateService.onChanged(["selectedPaperEntities"], loadPaperText),
+  PLAPI.uiStateService.onChanged(["selectedPaperEntities"], onPaperChange),
 );
 
 onMounted(() => {

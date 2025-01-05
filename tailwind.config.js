@@ -1,5 +1,5 @@
 module.exports = {
-  content: ["./**/*.{html,vue}"],
+  content: ["view/**/*.{html,vue}"],
   theme: {
     extend: {
       colors: {

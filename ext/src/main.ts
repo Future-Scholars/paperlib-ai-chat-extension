@@ -1,15 +1,15 @@
-import { createReadStream } from "fs";
 import { PLAPI, PLExtAPI, PLExtension, PLMainAPI } from "paperlib-api/api";
 import { PaperEntity } from "paperlib-api/model";
-import { processId, urlUtils } from "paperlib-api/utils";
+import { processId } from "paperlib-api/utils";
 import path from "path";
-import { blob } from "stream/consumers";
 
 const extID = "@future-scholars/paperlib-ai-chat-extension";
 
 const windowID = "paperlib-ai-chat-extension-window";
 
 const openChatMenuItemId = "open-ai-chat";
+
+const RESET_CACHE_KEY = "reset-cache";
 
 class PaperlibAIChatExtension extends PLExtension {
   disposeCallbacks: (() => void)[];
@@ -34,6 +34,15 @@ class PaperlibAIChatExtension extends PLExtension {
             "The API key for Llama Parse. Obtain from https://cloud.llamaindex.ai/parse",
           value: "",
           order: 0,
+        },
+        [RESET_CACHE_KEY]: {
+          type: "button",
+          name: "Clear Cache",
+          description:
+            "Remove all cached messages and papers. Use this with caution.",
+          value: false,
+          btnLabel: "Clear",
+          order: 1,
         },
         "ai-model": {
           type: "options",
@@ -193,6 +202,17 @@ class PaperlibAIChatExtension extends PLExtension {
         },
       ),
     );
+    this.disposeCallbacks.push(
+      PLExtAPI.extensionPreferenceService.on(
+        `${this.id}:${RESET_CACHE_KEY}`,
+        (event) => {
+          const value = event.value.value;
+          if (value) {
+            PLAPI.logService.info(extID, `Clear cache successfully!`, true);
+          }
+        },
+      ),
+    );
   }
 
   private async _createChatWindow(paperEntity: PaperEntity) {
@@ -305,68 +325,6 @@ class PaperlibAIChatExtension extends PLExtension {
     );
 
     this._createChatWindow(selectedPaperEntity);
-  }
-
-  private async llamaParse(url: string) {
-    const llamaParseAPIKey = (await PLExtAPI.extensionPreferenceService.get(
-      "@future-scholars/paperlib-ai-chat-extension",
-      "llama-parse-api-key",
-    )) as string;
-
-    const fileBlob = await blob(createReadStream(urlUtils.eraseProtocol(url)));
-    const results = await PLExtAPI.networkTool.postForm(
-      "https://api.cloud.llamaindex.ai/api/parsing/upload",
-      {
-        file: fileBlob,
-      } as any,
-      {
-        accept: "application/json",
-        Authorization: `Bearer ${llamaParseAPIKey}`,
-      },
-      1,
-      240000,
-      true,
-    );
-    const id = results.body.id;
-
-    // Wait for the parsing to finish, check every 5 seconds
-    let status = "PENDING";
-    while (status === "PENDING") {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      const statusRes = await PLExtAPI.networkTool.get(
-        `https://api.cloud.llamaindex.ai/api/parsing/job/${id}`,
-        {
-          accept: "application/json",
-          Authorization: `Bearer ${llamaParseAPIKey}`,
-        },
-        1,
-        5000,
-        false,
-        true,
-      );
-      status = statusRes.body.status;
-    }
-
-    if (status === "ERROR") {
-      throw new Error("Llama Parse failed");
-    }
-
-    if (status === "SUCCESS") {
-      console.log("Parsing successful");
-      const textRes = await PLExtAPI.networkTool.get(
-        `https://api.cloud.llamaindex.ai/api/parsing/job/${id}/result/markdown`,
-        {
-          accept: "application/json",
-          Authorization: `Bearer ${llamaParseAPIKey}`,
-        },
-        1,
-        5000,
-        false,
-        true,
-      );
-      console.log(textRes.body);
-      return textRes.body.markdown;
-    }
   }
 }
 
