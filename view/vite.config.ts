@@ -45,7 +45,7 @@ export default defineConfig({
     copy({
       targets: [
         {
-          src: "node_modules/@xenova/transformers/dist/*.wasm",
+          src: "node_modules/@huggingface/transformers/dist/*.wasm",
           dest: "dist/transformersWasm",
         },
       ],

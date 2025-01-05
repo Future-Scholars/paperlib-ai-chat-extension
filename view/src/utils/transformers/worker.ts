@@ -4,14 +4,16 @@ import {
   FeatureExtractionPipeline,
   PipelineType,
   env,
-} from "@xenova/transformers";
+} from "@huggingface/transformers";
 
 env.allowLocalModels = false;
-env.backends.onnx.wasm.wasmPaths = self.location.href.replace(
-  "assets/worker.js",
-  "/transformersWasm/",
-);
-env.backends.onnx.wasm.numThreads = 4;
+if (env.backends?.onnx?.wasm) {
+  env.backends.onnx.wasm.wasmPaths = self.location.href.replace(
+    "assets/worker.js",
+    "/transformersWasm/",
+  );
+  env.backends.onnx.wasm.numThreads = 4;
+}
 
 // Define task function mapping
 const TASK_FUNCTION_MAPPING = {
