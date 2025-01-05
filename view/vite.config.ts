@@ -63,6 +63,6 @@ export default defineConfig({
         return m;
       },
     }),
-    commonjs(),
+    commonjs({ strictRequires: false }),
   ],
 });
