@@ -111,6 +111,13 @@ class PaperlibAIChatExtension extends PLExtension {
           value: "",
           order: 5,
         },
+        customAPIKey: {
+          type: "string",
+          name: "Custom API Key",
+          description: "This should be used if the custom model code is not empty.",
+          value: "",
+          order: 5,
+        },
         customModelCode: {
           type: "string",
           name: "Custom Model Code",
