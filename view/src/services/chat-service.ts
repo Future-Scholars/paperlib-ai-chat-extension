@@ -138,13 +138,15 @@ export class ChatService {
   }
 
   async llmConfig() {
+    const extID = "@future-scholars/paperlib-ai-chat-extension";
+
     let model = (await PLExtAPI.extensionPreferenceService.get(
-      "@future-scholars/paperlib-ai-chat-extension",
+      extID,
       "ai-model",
     )) as string;
 
     const customModelCode = (await PLExtAPI.extensionPreferenceService.get(
-      "@future-scholars/paperlib-ai-chat-extension",
+      extID,
       "customModelCode",
     )) as string;
 
@@ -153,32 +155,46 @@ export class ChatService {
     }
 
     const customAPIURL = (await PLExtAPI.extensionPreferenceService.get(
-      "@future-scholars/paperlib-ai-chat-extension",
+      extID,
       "customAPIURL",
     )) as string;
+
+    const customAPIKey = (await PLExtAPI.extensionPreferenceService.get(
+      extID,
+      "customAPIKey",
+    )) as string;
+
+    if (customAPIKey) {
+      return { model, customAPIURL, apiKey: customAPIKey };
+    }
 
     let apiKey = "";
 
     const modelServiceProvider = LLMsAPI.modelServiceProvider(model);
     if (modelServiceProvider === "Gemini") {
       apiKey = (await PLExtAPI.extensionPreferenceService.get(
-        "@future-scholars/paperlib-ai-chat-extension",
+        extID,
         "gemini-api-key",
       )) as string;
     } else if (modelServiceProvider === "OpenAI") {
       apiKey = (await PLExtAPI.extensionPreferenceService.get(
-        "@future-scholars/paperlib-ai-chat-extension",
+        extID,
         "openai-api-key",
       )) as string;
     } else if (modelServiceProvider === "Perplexity") {
       apiKey = (await PLExtAPI.extensionPreferenceService.get(
-        "@future-scholars/paperlib-ai-chat-extension",
+        extID,
         "perplexity-api-key",
       )) as string;
     } else if (modelServiceProvider === "Zhipu") {
       apiKey = (await PLExtAPI.extensionPreferenceService.get(
-        "@future-scholars/paperlib-ai-chat-extension",
+        extID,
         "zhipu-api-key",
+      )) as string;
+    } else {
+      apiKey = (await PLExtAPI.extensionPreferenceService.get(
+        extID,
+        "openai-api-key",
       )) as string;
     }
 
